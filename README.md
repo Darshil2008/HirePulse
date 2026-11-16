@@ -1,111 +1,73 @@
-# Job Portal
+# HirePulse — Tech Career Discovery Platform
 
-A full-stack job portal designed to connect job seekers with recruiters through a single platform.
-
-Job seekers can discover opportunities, apply for jobs, and track their applications. Recruiters can publish job openings and manage applicants, while administrators oversee platform activity and approve job listings.
-
-## 🎯 Problem Statement
-
-Finding relevant job opportunities and managing applications can be difficult for job seekers. At the same time, recruiters need an organized platform to publish openings and manage applications.
-
-Job Portal aims to simplify this process by bringing job seekers, recruiters, and administrators together in one platform.
-
-## 👥 User Roles
-
-- **Job Seeker:** Create a profile, browse jobs, apply for opportunities, and track applications.
-- **Recruiter:** Create and manage job listings and review applicants.
-- **Admin:** Manage users, review job listings, and approve or reject job postings.
-
-## ✨ Planned Features
-
-### MVP Features
-
-1. User registration and login.
-2. Role-based authentication.
-3. Job seeker profiles.
-4. Recruiter profiles.
-5. Create, edit, and delete job listings.
-6. Browse and search available jobs.
-7. Apply for job openings.
-8. View and manage applications.
-9. Track application status.
-10. Role-based dashboards.
-
-### Future Improvements
-
-- AI-powered resume analysis.
-- Personalized job recommendations.
-- Email notifications.
-- Advanced job filters.
-- Interview scheduling.
-- Real-time messaging.
-
-## 🛠️ Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| Python | Backend programming |
-| FastAPI | REST API development |
-| PostgreSQL | Database |
-| React | Frontend development |
-| JavaScript | Frontend logic |
-| Tailwind CSS | UI styling |
-| JWT | Authentication |
-| Git & GitHub | Version control |
-
-## 🏗️ Project Development
-
-This project is being developed as part of **ALTA Builder 30**, a 30-day building challenge.
-
-- **Track:** Full-Stack Development
-- **Duration:** 15 Days
-- **Project:** Job Portal
-- **Development Approach:** Plan, build, test, and deploy.
-
-## 📌 Current Status
-
-**Day 1 – Planning**
-
-- [x] Project selected.
-- [x] Problem statement defined.
-- [x] User roles identified.
-- [x] MVP features planned.
-- [ ] Database schema designed.
-- [ ] Backend development.
-- [ ] Frontend development.
-- [ ] Testing and deployment.
-
-## 🚀 Project Goal
-
-Build a functional, user-friendly job portal while learning and applying full-stack development concepts through hands-on implementation.
+**HirePulse** is a modern full-stack career discovery and recruitment platform built with **Python (Flask)**, **SQLite**, and modern frontend technologies. Designed as part of the **ALTA Builder 30** challenge (Track A).
 
 ---
 
-*Built as part of ALTA Builder 30.*
+## ⚡ Key Features
 
-## Run on macOS
+- **Dynamic Discovery Feed**: 31+ enriched job listings across major tech hubs (Bangalore, Mumbai, Delhi NCR, Pune, Hyderabad, Remote).
+- **Modern Job Cards**: Real corporate architecture cover photos, verified recruiter PFPs, and salary highlight badges.
+- **Floating Scroll Dock**: Sticky top filter dock that slides in smoothly on scroll with quick city chips and search inputs.
+- **Multi-City & Parameter Filtering**: Instant filtering by city, experience level, employment type, and work mode (*Remote, Hybrid, On-site*).
+- **1-Click Quick Apply**: Immediate application submission with live UI state updates (*Applied* toggle).
+- **Role-Based Authentication**:
+  - **Job Seeker**: Search, filter, apply, and track submitted applications.
+  - **Recruiter**: Post opportunities with validation and manage applicant pipelines.
+  - **Admin**: Review, approve, or reject job submissions and monitor platform users.
+- **Secure Password Hashing**: PBKDF2/SHA-256 via Werkzeug Security.
+- **1-Click Demo Logins**: Instant credential autofill for fast testing and grading.
 
-1. Open Terminal and move into this folder:
-   ```bash
-   cd Job-Portal
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Start the app:
-   ```bash
-   python app.py
-   ```
-5. Open http://127.0.0.1:5000 in your browser.
+---
 
-The SQLite database (`database.db`) is created automatically on first run.
+## 🛠️ Technology Stack
 
-## Demo admin login
-- Email: `admin@jobportal.com`
-- Password: `admin123`
+- **Backend**: Python 3, Flask, Werkzeug Security
+- **Database**: SQLite3 (Relational with foreign keys and unique constraints)
+- **Frontend**: HTML5, CSS3, Bootstrap 5, Bootstrap Icons
+- **Design System**: Royal Blue (`#2457bd`) & Deep Navy (`#14243c`) with corporate photography
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone & Navigate
+```bash
+git clone https://github.com/darshil2008/Job-Portal.git
+cd "Job-Portal"
+```
+
+### 2. Set Up Virtual Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run the Application
+```bash
+python3 app.py
+```
+
+### 5. Access the Platform
+Open your browser and navigate to:
+👉 **[http://127.0.0.1:5001](http://127.0.0.1:5001)**
+
+---
+
+## 🔑 Demo Accounts (1-Click Fill on `/login`)
+
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | `admin@hirepulse.com` | `admin123` |
+| **Recruiter** | `recruiter@technova.com` | `recruiter123` |
+| **Job Seeker** | `seeker@example.com` | `seeker123` |
+
+---
+
+## 📄 License
+Open source under the [MIT License](LICENSE). Built for the ALTA Builder 30 Challenge.

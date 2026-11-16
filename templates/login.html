@@ -1,12 +1,101 @@
 {% extends "base.html" %}
+
+{% block title %}Sign In | HirePulse{% endblock %}
+
 {% block content %}
-<div class="form-box">
-    <h2 class="text-center mb-4">Welcome Back</h2>
-    <form method="POST">
-        <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
-        <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
-        <button class="btn btn-primary w-100">Login</button>
-    </form>
-    <p class="text-center mt-3">New user? <a href="/register">Create Account</a></p>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
+                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
+                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 class="auth-title">Welcome to HirePulse</h2>
+            <p class="auth-subtitle">Sign in to your HirePulse account to continue</p>
+        </div>
+
+        <!-- 1-Click Demo Login Pills -->
+        <div class="demo-pills-box">
+            <div class="demo-pills-label">
+                <i class="bi bi-lightning-charge-fill text-warning"></i> Quick Demo Fill (1-Click):
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="demo-btn" onclick="fillDemo('seeker@example.com', 'seeker123')">
+                    <i class="bi bi-person me-1"></i> Job Seeker
+                </button>
+                <button type="button" class="demo-btn" onclick="fillDemo('recruiter@technova.com', 'recruiter123')">
+                    <i class="bi bi-building me-1"></i> Recruiter
+                </button>
+                <button type="button" class="demo-btn" onclick="fillDemo('admin@hirepulse.com', 'admin123')">
+                    <i class="bi bi-shield-lock me-1"></i> Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <form method="POST" action="/login">
+            <div class="auth-input-group">
+                <label for="email">Email Address</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-envelope auth-field-icon"></i>
+                    <input type="email" id="email" name="email" class="auth-input"
+                           placeholder="name@company.com" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="auth-input-group">
+                <label for="password">Password</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-lock auth-field-icon"></i>
+                    <input type="password" id="password" name="password" class="auth-input"
+                           placeholder="Enter your password" required autocomplete="current-password">
+                    <button type="button" class="btn btn-sm btn-link text-muted position-absolute end-0 me-2 text-decoration-none" onclick="togglePasswordVisibility('password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth-submit">
+                Sign In to HirePulse →
+            </button>
+
+            <div class="text-center mt-4 pt-3 border-top">
+                <span class="text-muted small">New to HirePulse?</span>
+                <a href="/register" class="fw-bold text-primary text-decoration-none small ms-1">
+                    Create an account <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="text-center mt-2">
+                <a href="/" class="text-secondary small text-decoration-none">
+                    <i class="bi bi-arrow-left"></i> Back to Homepage
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+function fillDemo(email, pass) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+}
+
+function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+</script>
 {% endblock %}

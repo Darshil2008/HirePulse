@@ -1,12 +1,14 @@
 
 from flask import Flask, render_template, request, redirect, session, flash
 import sqlite3
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "change-this-secret-key"
-DB = "database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB = os.path.join(BASE_DIR, "database.db")
 
 
 def get_db():
@@ -67,9 +69,12 @@ def initialize_db():
         if column not in existing_columns:
             db.execute(f"ALTER TABLE jobs ADD COLUMN {column} {definition}")
 
+    # Check for admin user (migrate legacy jobportal email to hirepulse if present)
+    db.execute("UPDATE users SET email='admin@hirepulse.com' WHERE email='admin@jobportal.com'")
+
     admin = db.execute(
         "SELECT id FROM users WHERE email=?",
-        ("admin@jobportal.com",)
+        ("admin@hirepulse.com",)
     ).fetchone()
 
     if not admin:
@@ -77,112 +82,185 @@ def initialize_db():
             INSERT INTO users (name,email,password,role)
             VALUES (?,?,?,?)
         """, (
-            "Admin",
-            "admin@jobportal.com",
+            "Admin User",
+            "admin@hirepulse.com",
             generate_password_hash("admin123"),
             "admin"
         ))
 
-    # Insert demo jobs only if the jobs table is empty
+    # Add demo recruiter and job seeker accounts if not present
+    recruiter = db.execute(
+        "SELECT id FROM users WHERE email=?",
+        ("recruiter@technova.com",)
+    ).fetchone()
+
+    if not recruiter:
+        db.execute("""
+            INSERT INTO users (name,email,password,role)
+            VALUES (?,?,?,?)
+        """, (
+            "Priya Sharma (TechNova HR)",
+            "recruiter@technova.com",
+            generate_password_hash("recruiter123"),
+            "recruiter"
+        ))
+
+    seeker = db.execute(
+        "SELECT id FROM users WHERE email=?",
+        ("seeker@example.com",)
+    ).fetchone()
+
+    if not seeker:
+        db.execute("""
+            INSERT INTO users (name,email,password,role)
+            VALUES (?,?,?,?)
+        """, (
+            "Darshil Patel",
+            "seeker@example.com",
+            generate_password_hash("seeker123"),
+            "job_seeker"
+        ))
+
+    # Insert rich simulated jobs if the jobs table has fewer than 20 jobs
     count = db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
 
-    if count == 0:
+    if count < 20:
+        db.execute("DELETE FROM jobs WHERE recruiter_id IS NULL")
+        
         demo_jobs = [
-            ("Python Developer", "TechNova", "Bangalore",
-             "₹4-8 LPA", "Build backend applications and APIs.",
-             "Python, Flask, Django, SQL", "Full-time", "Hybrid", "0-2 years"),
+            # Bangalore Jobs
+            ("Senior Python Developer", "TechNova Solutions", "Bangalore",
+             "₹12-20 LPA", "Architect scalable microservices and REST APIs using Python, Flask, and PostgreSQL. Lead backend engineering sprints and mentor junior developers.",
+             "Python, Flask, Django, PostgreSQL, Docker, Redis", "Full-time", "Hybrid", "3-5 years"),
 
-            ("Frontend Developer", "PixelCraft", "Remote",
-             "₹5-9 LPA", "Create responsive and user-friendly web interfaces.",
-             "HTML, CSS, JavaScript, React", "Full-time", "Remote", "0-2 years"),
+            ("Full Stack Web Developer", "Infosys Limited", "Bangalore",
+             "₹7-14 LPA", "Build customer-facing responsive web applications. Collaborate with UX designers to implement intuitive interfaces and robust REST backends.",
+             "React, Node.js, Express, MongoDB, JavaScript, AWS", "Full-time", "Hybrid", "1-3 years"),
 
-            ("Java Developer", "CodeSphere", "Pune",
-             "₹5-10 LPA", "Develop scalable enterprise applications.",
-             "Java, Spring Boot, MySQL, Git", "Full-time", "On-site", "1-3 years"),
+            ("Cloud & DevOps Architect", "CloudMatrix India", "Bangalore",
+             "₹14-24 LPA", "Design and automate AWS/Azure cloud infrastructure. Oversee Kubernetes cluster orchestration, Terraform provisioning, and zero-downtime CI/CD deployments.",
+             "AWS, Kubernetes, Docker, Terraform, CI/CD, Linux", "Full-time", "On-site", "3-5 years"),
 
-            ("Data Analyst Intern", "DataBridge", "Jaipur",
-             "₹15k-25k/month", "Analyze business data and prepare reports.",
-             "Python, SQL, Excel, Power BI", "Internship", "Hybrid", "Fresher"),
+            ("AI / Machine Learning Engineer", "NeuralWorks Labs", "Bangalore",
+             "₹10-18 LPA", "Develop production-ready LLM pipelines, computer vision models, and predictive analytics services using PyTorch and HuggingFace.",
+             "Python, PyTorch, TensorFlow, Scikit-learn, LangChain, FastAPI", "Full-time", "Hybrid", "2-4 years"),
 
-            ("AI/ML Engineer", "NeuralWorks", "Hyderabad",
-             "₹7-14 LPA", "Develop machine learning models and AI solutions.",
-             "Python, TensorFlow, PyTorch, Scikit-learn", "Full-time", "Hybrid", "1-3 years"),
+            ("Rust Systems Engineer", "IronForge Systems", "Bangalore",
+             "₹12-22 LPA", "Develop low-latency, memory-safe high-throughput networking libraries and distributed caching mechanisms.",
+             "Rust, C++, WebAssembly, Linux, Git, Multithreading", "Full-time", "On-site", "2-4 years"),
 
-            ("Full Stack Developer", "WebNest", "Remote",
-             "₹6-12 LPA", "Build complete web applications.",
-             "React, Node.js, Express, MongoDB", "Full-time", "Remote", "1-3 years"),
+            ("Junior Python Backend Intern", "ZetaByte Technologies", "Bangalore",
+             "₹25k-35k/month", "Assist in creating RESTful endpoints, writing automated unit tests, and optimizing database queries for high-volume endpoints.",
+             "Python, Flask, SQLite, Git, Postman", "Internship", "Hybrid", "Fresher"),
 
-            ("UI/UX Designer", "DesignHive", "Mumbai",
-             "₹4-7 LPA", "Design intuitive digital experiences.",
-             "Figma, UI Design, UX Research, Prototyping", "Full-time", "On-site", "0-2 years"),
+            # Mumbai Jobs
+            ("Node.js Backend Developer", "ApiLayer Fintech", "Mumbai",
+             "₹8-15 LPA", "Build secure banking and payment integration microservices. Ensure PCI-DSS compliance and sub-second latency.",
+             "Node.js, Express, TypeScript, Redis, MongoDB, Kafka", "Full-time", "Hybrid", "2-4 years"),
 
-            ("C++ Developer", "LogicLabs", "Delhi",
-             "₹5-9 LPA", "Work on performance-focused software.",
-             "C++, DSA, OOP, STL, Git", "Full-time", "Hybrid", "0-2 years"),
+            ("UI/UX Product Designer", "DesignHive Studio", "Mumbai",
+             "₹6-11 LPA", "Create high-fidelity wireframes, user journeys, design systems, and clickable prototypes for mobile and web fintech platforms.",
+             "Figma, Adobe XD, UI/UX, Design Systems, Prototyping", "Full-time", "On-site", "1-3 years"),
 
-            ("Cloud Engineer", "CloudMatrix", "Bangalore",
-             "₹8-15 LPA", "Manage cloud infrastructure and deployments.",
-             "AWS, Docker, Kubernetes, Linux", "Full-time", "Hybrid", "2-4 years"),
+            ("Financial Data Analyst", "KFin Analytics", "Mumbai",
+             "₹7-12 LPA", "Analyze equity and mutual fund market data. Prepare automated executive dashboards using Power BI and Python.",
+             "Python, SQL, Excel, Power BI, Tableau, Financial Modelling", "Full-time", "On-site", "1-3 years"),
 
-            ("Mobile App Developer", "AppForge", "Remote",
-             "₹5-10 LPA", "Develop cross-platform mobile applications.",
-             "Flutter, Dart, Firebase, REST API", "Full-time", "Remote", "0-2 years"),
+            ("React Native Mobile Engineer", "PayQuick India", "Mumbai",
+             "₹9-16 LPA", "Build and optimize cross-platform mobile wallets with smooth animations and biometric authentication.",
+             "React Native, JavaScript, Redux, iOS, Android, REST API", "Full-time", "Hybrid", "2-4 years"),
 
-            ("Backend Developer Intern", "DevOrbit", "Jodhpur",
-             "₹10k-18k/month", "Assist in building and testing backend services.",
-             "Python, FastAPI, PostgreSQL, Git", "Internship", "On-site", "Fresher"),
+            # Delhi / NCR (Delhi, Gurgaon, Noida)
+            ("Cybersecurity & SOC Analyst", "SecureStack Defense", "Gurgaon",
+             "₹8-14 LPA", "Monitor network telemetry, analyze SIEM alerts, perform vulnerability scans, and respond to security incidents.",
+             "SIEM, Network Security, Python, Linux, OWASP, Wireshark", "Full-time", "Hybrid", "1-3 years"),
 
-            ("Cybersecurity Analyst", "SecureStack", "Gurgaon",
-             "₹6-11 LPA", "Monitor systems and identify security vulnerabilities.",
-             "Linux, Networking, Python, Security", "Full-time", "Hybrid", "1-3 years"),
+            ("Senior Java Spring Boot Engineer", "CodeSphere Digital", "Gurgaon",
+             "₹11-19 LPA", "Develop mission-critical enterprise services with Spring Boot, Kafka streaming, and MySQL database partitioning.",
+             "Java, Spring Boot, Microservices, Kafka, MySQL, Hibernate", "Full-time", "On-site", "3-5 years"),
 
-            ("Senior Python Developer", "Zyphra Labs", "Remote",
-             "₹12-20 LPA", "Architect and build high-traffic APIs and microservices.",
-             "Python, Django, Redis, Celery", "Full-time", "Remote", "3-5 years"),
+            ("PHP / Laravel Web Developer", "WebCrate Digital", "Noida",
+             "₹4-8 LPA", "Maintain and enhance high-traffic digital e-commerce storefronts and custom ERP plugins using Laravel.",
+             "PHP, Laravel, MySQL, JavaScript, HTML5, CSS3", "Full-time", "On-site", "0-2 years"),
 
-            ("React Developer", "InterfaceHQ", "Bangalore",
-             "₹6-11 LPA", "Build dynamic single-page applications with React and TypeScript.",
-             "React, TypeScript, Redux, Tailwind CSS", "Full-time", "Hybrid", "1-3 years"),
+            ("Frontend React Specialist", "InnoWave Media", "Delhi",
+             "₹6-12 LPA", "Create fast, accessible, SEO-optimized web portals using React 18, Next.js, and modern Tailwind CSS.",
+             "React, Next.js, TypeScript, Tailwind CSS, Redux", "Full-time", "Hybrid", "1-3 years"),
 
-            ("DevOps Engineer", "DeployKit", "Pune",
-             "₹8-14 LPA", "Automate CI/CD pipelines and manage cloud infrastructure.",
-             "Docker, Kubernetes, AWS, GitHub Actions", "Full-time", "Hybrid", "2-4 years"),
+            # Hyderabad Jobs
+            ("Big Data Engineer", "DataBridge Global", "Hyderabad",
+             "₹10-18 LPA", "Build distributed ETL pipelines using PySpark and Snowflake. Process terabytes of unstructured event logs daily.",
+             "Python, PySpark, Hadoop, Snowflake, SQL, Airflow", "Full-time", "On-site", "2-4 years"),
 
-            ("Data Scientist", "InsightCore", "Hyderabad",
-             "₹10-18 LPA", "Extract insights from large datasets using statistical modelling.",
-             "Python, Pandas, SQL, Scikit-learn", "Full-time", "On-site", "2-4 years"),
+            ("Enterprise Software Engineer (Java)", "Tata Consultancy Services", "Hyderabad",
+             "₹6-11 LPA", "Implement enterprise integration middleware and REST services for multinational banking clients.",
+             "Java, Spring Boot, Oracle DB, REST, JUnit, Git", "Full-time", "Hybrid", "1-3 years"),
 
-            ("PHP Developer", "WebCrate", "Noida",
-             "₹3-6 LPA", "Maintain and extend e-commerce platforms built with Laravel.",
-             "PHP, Laravel, MySQL, REST API", "Full-time", "On-site", "0-2 years"),
+            ("Python Data Science Intern", "InsightCore Analytics", "Hyderabad",
+             "₹20k-30k/month", "Perform exploratory data analysis, clean structured datasets, and build baseline classification models.",
+             "Python, Pandas, NumPy, Scikit-learn, Matplotlib", "Internship", "On-site", "Fresher"),
 
-            ("Angular Developer", "FormStack", "Remote",
-             "₹5-9 LPA", "Build enterprise dashboards and internal tools with Angular.",
-             "Angular, TypeScript, RxJS, Material UI", "Full-time", "Remote", "1-3 years"),
+            # Pune Jobs
+            ("C++ Systems Programmer", "LogicLabs Automotive", "Pune",
+             "₹7-13 LPA", "Develop embedded software and driver safety telemetry systems with strict real-time constraints.",
+             "C++, STL, Linux, RTOS, Git, Multithreading", "Full-time", "On-site", "1-3 years"),
 
-            ("Blockchain Developer", "ChainBridge", "Bangalore",
-             "₹10-16 LPA", "Develop smart contracts and decentralized applications.",
-             "Solidity, Ethereum, Web3.js, Node.js", "Full-time", "Hybrid", "1-3 years"),
+            ("DevOps CI/CD Engineer", "DeployKit Solutions", "Pune",
+             "₹8-14 LPA", "Maintain GitLab CI/CD pipelines, Docker container registries, and Prometheus/Grafana monitoring alerts.",
+             "Docker, Kubernetes, Jenkins, GitLab, Prometheus, Bash", "Full-time", "Hybrid", "2-4 years"),
 
-            ("Go Developer", "StreamOps", "Remote",
-             "₹9-15 LPA", "Build high-performance backend services and distributed systems.",
-             "Go, gRPC, PostgreSQL, Docker", "Full-time", "Remote", "2-4 years"),
+            ("Angular Frontend Developer", "FormStack Technologies", "Pune",
+             "₹6-10 LPA", "Build responsive corporate dashboards and analytics portals with Angular 16 and RxJS state management.",
+             "Angular, TypeScript, RxJS, HTML5, Bootstrap, CSS", "Full-time", "Hybrid", "1-3 years"),
 
-            ("QA Automation Engineer", "TestPilot", "Chennai",
-             "₹5-9 LPA", "Design automated test suites for web and mobile applications.",
-             "Selenium, Python, Jenkins, Postman", "Full-time", "On-site", "1-3 years"),
+            # Chennai Jobs
+            ("QA Automation Test Engineer", "TestPilot Labs", "Chennai",
+             "₹5-9 LPA", "Design automated regression test suites for web and mobile platforms with Selenium WebDriver and PyTest.",
+             "Selenium, Python, PyTest, Jenkins, Postman, JIRA", "Full-time", "On-site", "1-3 years"),
 
-            ("Machine Learning Intern", "CortexAI", "Remote",
-             "₹20k-35k/month", "Assist in training and evaluating ML models on real-world datasets.",
-             "Python, PyTorch, NumPy, Jupyter", "Internship", "Remote", "Fresher"),
+            ("Database Administrator (PostgreSQL)", "Apex Data Systems", "Chennai",
+             "₹9-15 LPA", "Manage query optimization, indexing strategies, replication failover, and disaster recovery for PostgreSQL clusters.",
+             "PostgreSQL, Linux, SQL Tuning, Backup/Recovery, Shell Scripting", "Full-time", "On-site", "3-5 years"),
 
-            ("Rust Developer", "IronForge Systems", "Bangalore",
-             "₹10-18 LPA", "Build memory-safe systems software and tooling.",
-             "Rust, Linux, Git, WebAssembly", "Full-time", "On-site", "2-4 years"),
+            # Ahmedabad & Gujarat Jobs
+            ("Python & Django Developer", "Vibrant Infotech", "Ahmedabad",
+             "₹4.5-8.5 LPA", "Build business portals, inventory management systems, and third-party API integrations with Django.",
+             "Python, Django, PostgreSQL, HTML, CSS, JavaScript", "Full-time", "On-site", "0-2 years"),
 
-            ("Node.js Developer", "ApiLayer", "Mumbai",
-             "₹5-10 LPA", "Design and ship RESTful APIs for client-facing products.",
-             "Node.js, Express, MongoDB, Redis", "Full-time", "Hybrid", "1-3 years")
+            ("Flutter Mobile App Developer", "AppForge Solutions", "Ahmedabad",
+             "₹5-9 LPA", "Develop cross-platform iOS and Android mobile apps with clean BLoC state management and Firebase backends.",
+             "Flutter, Dart, Firebase, REST APIs, Git", "Full-time", "On-site", "1-3 years"),
+
+            # Kolkata Jobs
+            ("Data Engineer (SQL / BI)", "EastBridge Consulting", "Kolkata",
+             "₹5-9 LPA", "Design data marts, write complex SQL stored procedures, and automate weekly sales reporting.",
+             "SQL, Power BI, Excel, ETL, Python", "Full-time", "Hybrid", "1-3 years"),
+
+            ("Web Developer (MERN)", "BengalTech Labs", "Kolkata",
+             "₹4-7.5 LPA", "Design interactive customer portals with modern React components and Express.js backend services.",
+             "React, Node.js, Express, MongoDB, JavaScript", "Full-time", "On-site", "0-2 years"),
+
+            # Jaipur Jobs
+            ("Junior Software Associate", "PinkCity Software", "Jaipur",
+             "₹3.5-6 LPA", "Participate in SDLC, write modular code, fix QA defects, and document API contracts.",
+             "Java, Python, SQL, Git, HTML/CSS", "Full-time", "On-site", "Fresher"),
+
+            # Remote / Work-From-Home Jobs
+            ("Staff Python / FastAPI Architect", "GlobalSync Software", "Remote",
+             "₹18-28 LPA", "Lead architecture of async event-driven systems. Manage distributed caching, message queues, and high-load traffic.",
+             "Python, FastAPI, Celery, Redis, PostgreSQL, AWS", "Full-time", "Remote", "5+ years"),
+
+            ("Senior React & Next.js Engineer", "PixelCraft Global", "Remote",
+             "₹12-22 LPA", "Lead development of customer-facing SaaS dashboards with micro-frontends and server-side rendering.",
+             "React, Next.js, TypeScript, GraphQL, Tailwind CSS", "Full-time", "Remote", "3-5 years"),
+
+            ("Golang Microservices Engineer", "StreamOps Distributed", "Remote",
+             "₹14-25 LPA", "Build high-throughput gRPC services, WebSocket message dispatchers, and distributed telemetry collectors.",
+             "Go, gRPC, Docker, Kafka, PostgreSQL, Redis", "Full-time", "Remote", "3-5 years"),
+
+            ("Machine Learning Research Intern", "CortexAI Labs", "Remote",
+             "₹30k-45k/month", "Conduct experiments on LLM fine-tuning, RAG evaluation frameworks, and synthetic dataset generation.",
+             "Python, PyTorch, HuggingFace, RAG, Jupyter, Git", "Internship", "Remote", "Fresher")
         ]
 
         for job in demo_jobs:
@@ -198,6 +276,89 @@ def initialize_db():
 
 
 initialize_db()
+
+
+# Pool of high-resolution modern tech buildings & corporate campus photography
+BUILDING_PHOTOS = [
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1486718448742-163732cd1544?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80"
+]
+
+# Verified recruiter & company profile pictures (PFPs)
+COMPANY_PFPS = {
+    "technova": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80",
+    "infosys": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=160&auto=format&fit=crop&q=80",
+    "neuralworks": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
+    "cloudmatrix": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=160&auto=format&fit=crop&q=80",
+    "securestack": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
+    "apilayer": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=160&auto=format&fit=crop&q=80",
+    "designhive": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80",
+    "codesphere": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
+    "ironforge": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=160&auto=format&fit=crop&q=80",
+    "databridge": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=160&auto=format&fit=crop&q=80",
+    "appforge": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=160&auto=format&fit=crop&q=80",
+    "logiclabs": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&auto=format&fit=crop&q=80",
+    "pixelcraft": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80",
+    "webnest": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=160&auto=format&fit=crop&q=80",
+    "cortexai": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80",
+    "tata": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
+    "kfin": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
+    "payquick": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=160&auto=format&fit=crop&q=80",
+    "globalsync": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=160&auto=format&fit=crop&q=80"
+}
+
+FALLBACK_PFPS = [
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80"
+]
+
+def enrich_job_data(row):
+    """Enriches job records with building photos, recruiter/company PFPs, ratings, and meta details."""
+    j = dict(row)
+    job_id = j.get("id", 1)
+    
+    # Deterministic building photo
+    b_idx = (job_id * 5) % len(BUILDING_PHOTOS)
+    j["building_img"] = BUILDING_PHOTOS[b_idx]
+    
+    # Deterministic PFP based on company name
+    comp_lower = j.get("company", "").lower()
+    pfp_found = None
+    for k, v in COMPANY_PFPS.items():
+        if k in comp_lower:
+            pfp_found = v
+            break
+    if not pfp_found:
+        f_idx = (job_id * 7) % len(FALLBACK_PFPS)
+        pfp_found = FALLBACK_PFPS[f_idx]
+    j["pfp_img"] = pfp_found
+    
+    # Ratings & review stats
+    ratings = ["4.2", "4.3", "4.5", "4.6", "4.4", "4.7", "4.1"]
+    reviews = ["1.4k", "950", "2.1k", "1.1k", "820", "1.7k", "640"]
+    times = ["Just now", "Today", "1d ago", "2d ago", "3d ago"]
+    
+    j["rating"] = ratings[job_id % len(ratings)]
+    j["reviews"] = reviews[job_id % len(reviews)]
+    j["posted_time"] = times[job_id % len(times)]
+    
+    return j
 
 
 def login_required(func):
@@ -225,7 +386,12 @@ def role_required(role):
 @app.route("/")
 def index():
     search = request.args.get("search", "").strip()
+    city = request.args.get("city", "").strip()
     location = request.args.get("location", "").strip()
+    # If city is supplied via tab or filter, prioritize it
+    selected_location = city if city else location
+
+    experience = request.args.get("experience", "").strip()
     job_type = request.args.get("job_type", "").strip()
     work_mode = request.args.get("work_mode", "").strip()
 
@@ -236,9 +402,13 @@ def index():
     """
     params = [f"%{search}%"] * 3
 
-    if location:
+    if selected_location:
         query += " AND location LIKE ?"
-        params.append(f"%{location}%")
+        params.append(f"%{selected_location}%")
+
+    if experience:
+        query += " AND experience LIKE ?"
+        params.append(f"%{experience}%")
 
     if job_type:
         query += " AND job_type=?"
@@ -251,16 +421,62 @@ def index():
     query += " ORDER BY id DESC"
 
     db = get_db()
-    jobs = db.execute(query, params).fetchall()
+    jobs_raw = db.execute(query, params).fetchall()
+    jobs = [enrich_job_data(r) for r in jobs_raw]
+
+    # Pre-calculate job counts for popular cities for the HirePulse city filter cards
+    popular_cities_list = [
+        {"name": "Bangalore", "label": "Bangalore", "icon": "bi-buildings"},
+        {"name": "Mumbai", "label": "Mumbai", "icon": "bi-cash-coin"},
+        {"name": "Delhi", "label": "Delhi / NCR", "icon": "bi-bank"},
+        {"name": "Hyderabad", "label": "Hyderabad", "icon": "bi-cpu"},
+        {"name": "Pune", "label": "Pune", "icon": "bi-code-slash"},
+        {"name": "Chennai", "label": "Chennai", "icon": "bi-pc-display"},
+        {"name": "Ahmedabad", "label": "Ahmedabad", "icon": "bi-briefcase"},
+        {"name": "Kolkata", "label": "Kolkata", "icon": "bi-compass"},
+        {"name": "Remote", "label": "Work From Home", "icon": "bi-house-check"}
+    ]
+
+    city_stats = []
+    for c in popular_cities_list:
+        c_count = db.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status='approved' AND location LIKE ?",
+            (f"%{c['name']}%",)
+        ).fetchone()[0]
+        city_stats.append({
+            "name": c["name"],
+            "label": c["label"],
+            "icon": c["icon"],
+            "count": c_count
+        })
+
+    # Track applied jobs for logged in job seeker
+    applied_job_ids = set()
+    if session.get("user_id") and session.get("role") == "job_seeker":
+        user_apps = db.execute(
+            "SELECT job_id FROM applications WHERE user_id=?",
+            (session["user_id"],)
+        ).fetchall()
+        applied_job_ids = {row["job_id"] for row in user_apps}
+
+    total_jobs_count = db.execute("SELECT COUNT(*) FROM jobs WHERE status='approved'").fetchone()[0]
+    total_companies_count = db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE status='approved'").fetchone()[0]
+
     db.close()
 
     return render_template(
         "index.html",
         jobs=jobs,
         search=search,
-        location=location,
+        location=selected_location,
+        selected_city=city,
+        experience=experience,
         job_type=job_type,
-        work_mode=work_mode
+        work_mode=work_mode,
+        city_stats=city_stats,
+        applied_job_ids=applied_job_ids,
+        total_jobs_count=total_jobs_count,
+        total_companies_count=total_companies_count
     )
 
 
@@ -381,6 +597,20 @@ def post_job():
     if request.method == "POST":
         db = get_db()
 
+        title = request.form.get("title", "").strip()
+        company = request.form.get("company", "").strip()
+        location = request.form.get("location", "Remote").strip()
+        salary = request.form.get("salary", "Competitive").strip()
+        description = request.form.get("description", "").strip()
+        skills = request.form.get("skills", "").strip()
+        job_type = request.form.get("job_type", "Full-time").strip()
+        work_mode = request.form.get("work_mode", "On-site").strip()
+        experience = request.form.get("experience", "Fresher").strip()
+
+        if not title or not company:
+            flash("Job title and company name are required.")
+            return redirect("/post-job")
+
         db.execute("""
             INSERT INTO jobs
             (recruiter_id,title,company,location,salary,description,
@@ -388,21 +618,21 @@ def post_job():
             VALUES (?,?,?,?,?,?,?,?,?,?)
         """, (
             session["user_id"],
-            request.form["title"],
-            request.form["company"],
-            request.form["location"],
-            request.form["salary"],
-            request.form["description"],
-            request.form["skills"],
-            request.form["job_type"],
-            request.form["work_mode"],
-            request.form["experience"]
+            title,
+            company,
+            location,
+            salary,
+            description,
+            skills,
+            job_type,
+            work_mode,
+            experience
         ))
 
         db.commit()
         db.close()
 
-        flash("Job submitted for admin approval")
+        flash("Job submitted successfully! Awaiting admin approval.")
         return redirect("/dashboard")
 
     return render_template("post_job.html")

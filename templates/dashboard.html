@@ -1,55 +1,220 @@
 {% extends "base.html" %}
+
+{% block title %}Dashboard | HirePulse{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">Welcome, {{ session.get('name') }}</h2>
+<div class="dashboard-layout">
 
-{% if session.get('role') == 'recruiter' %}
-    <h4>My Job Listings</h4>
-    <a href="/post-job" class="btn btn-primary mb-3">+ Add Job</a>
-    <div class="table-responsive">
-    <table class="table table-bordered bg-white align-middle">
-        <tr><th>Title</th><th>Company</th><th>Status</th><th>Action</th></tr>
-        {% for job in jobs %}
-        <tr>
-            <td>{{ job.title }}</td><td>{{ job.company }}</td><td>{{ job.status }}</td>
-            <td>
-                <form method="POST" action="/delete-job/{{ job.id }}" onsubmit="return confirm('Delete this job?')">
-                    <button class="btn btn-danger btn-sm">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="4" class="text-center">You have not posted any jobs yet.</td></tr>
-        {% endfor %}
-    </table>
-    </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
+                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
+                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span>HirePulse</span>
+        </a>
 
-    <h4 class="mt-5">Applicants</h4>
-    <div class="table-responsive">
-    <table class="table table-bordered bg-white">
-        <tr><th>Applicant</th><th>Job</th><th>Status</th></tr>
-        {% for a in applications %}
-        <tr><td>{{ a.applicant }}</td><td>{{ a.title }}</td><td>{{ a.status }}</td></tr>
-        {% else %}
-        <tr><td colspan="3" class="text-center">No applications received yet.</td></tr>
-        {% endfor %}
-    </table>
-    </div>
+        <p class="sidebar-label">WORKSPACE</p>
 
-{% elif session.get('role') == 'job_seeker' %}
-    <h4>My Applications</h4>
-    <div class="table-responsive">
-    <table class="table table-bordered bg-white">
-        <tr><th>Job</th><th>Company</th><th>Status</th></tr>
-        {% for a in applications %}
-        <tr><td>{{ a.title }}</td><td>{{ a.company }}</td><td>{{ a.status }}</td></tr>
-        {% else %}
-        <tr><td colspan="3" class="text-center">You have not applied for any jobs yet.</td></tr>
-        {% endfor %}
-    </table>
-    </div>
+        <a href="/" class="side-link">
+            <i class="bi bi-search"></i> <span>Find Jobs</span>
+        </a>
+        <a href="/dashboard" class="side-link active">
+            <i class="bi bi-grid-1x2"></i> <span>My Dashboard</span>
+        </a>
 
-{% elif session.get('role') == 'admin' %}
-    <h4>Admin Dashboard</h4>
-    <a href="/admin" class="btn btn-primary">Manage Platform</a>
-{% endif %}
+        {% if session.get('role') == 'job_seeker' %}
+        <a href="/dashboard" class="side-link">
+            <i class="bi bi-send-check"></i> <span>My Applications</span>
+        </a>
+        {% endif %}
+
+        {% if session.get('role') == 'recruiter' %}
+        <a href="/post-job" class="side-link">
+            <i class="bi bi-plus-circle"></i> <span>Post a Job</span>
+        </a>
+        {% endif %}
+
+        {% if session.get('role') == 'admin' %}
+        <a href="/admin" class="side-link">
+            <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
+        </a>
+        {% endif %}
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-help">
+                <strong>Dashboard Help</strong>
+                <p>Track your applications, manage postings and profile details.</p>
+            </div>
+            <a href="/logout" class="side-link">
+                <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div>
+                <span class="eyebrow">USER OVERVIEW</span>
+                <h2>Welcome, {{ session.get('name') }}</h2>
+            </div>
+
+            <div class="top-profile">
+                <div class="avatar">{{ session.get('name', 'U')[0]|upper }}</div>
+                <div>
+                    <strong>{{ session.get('name') }}</strong>
+                    <small>{{ session.get('role')|replace('_', ' ')|title }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECRUITER VIEW -->
+        {% if session.get('role') == 'recruiter' %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">My Job Listings</h4>
+                <a href="/post-job" class="btn btn-primary btn-sm fw-semibold">
+                    <i class="bi bi-plus-circle me-1"></i> Post New Job
+                </a>
+            </div>
+
+            <div class="bg-white rounded-3 border p-3 mb-4 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ job.title }}</strong>
+                                    <div class="text-muted small">{{ job.location }} • {{ job.salary }}</div>
+                                </td>
+                                <td>{{ job.company }}</td>
+                                <td>
+                                    {% if job.status == 'approved' %}
+                                        <span class="badge bg-success-subtle text-success">Live</span>
+                                    {% elif job.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning">Pending Review</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ job.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST" action="/delete-job/{{ job.id }}" onsubmit="return confirm('Delete this job listing?')" class="d-inline">
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">You have not posted any jobs yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h4 class="fw-bold mb-3">Candidates / Applicants</h4>
+            <div class="bg-white rounded-3 border p-3 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Applied Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in applications %}
+                            <tr>
+                                <td><strong>{{ a.applicant }}</strong></td>
+                                <td>{{ a.title }}</td>
+                                <td><span class="badge bg-primary-subtle text-primary">{{ a.status }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center py-4 text-muted">No applications received yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        <!-- JOB SEEKER VIEW -->
+        {% elif session.get('role') == 'job_seeker' %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">My Applications</h4>
+                <a href="/" class="btn btn-primary btn-sm fw-semibold">
+                    <i class="bi bi-search me-1"></i> Browse More Jobs
+                </a>
+            </div>
+
+            <div class="bg-white rounded-3 border p-3 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in applications %}
+                            <tr>
+                                <td><strong>{{ a.title }}</strong></td>
+                                <td>{{ a.company }}</td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success py-2 px-3 fw-semibold">
+                                        <i class="bi bi-check-circle-fill me-1"></i> {{ a.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i>
+                                    You have not applied for any jobs yet.
+                                    <div class="mt-2">
+                                        <a href="/" class="btn btn-sm btn-primary">Discover Jobs</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        <!-- ADMIN VIEW -->
+        {% elif session.get('role') == 'admin' %}
+            <div class="bg-white rounded-3 border p-4 shadow-sm">
+                <h4 class="fw-bold mb-2">Admin Dashboard</h4>
+                <p class="text-muted">You have full moderation privileges over job listings and registered users.</p>
+                <a href="/admin" class="btn btn-primary">Open Admin Moderation Panel</a>
+            </div>
+        {% endif %}
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer mt-5">
+            <span>© 2026 HirePulse</span>
+            <span>Built for ambitious engineers and modern tech teams.</span>
+        </footer>
+
+    </main>
+</div>
 {% endblock %}

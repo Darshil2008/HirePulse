@@ -1,8 +1,8 @@
-# Job Portal – Features
+# HirePulse – Features
 
 ## 1. Project Overview
 
-Job Portal is a full-stack web application that connects job seekers with recruiters. It provides a platform where users can discover job opportunities, apply for positions, and manage recruitment activities.
+**HirePulse** is a modern full-stack career discovery and recruitment platform that connects job seekers with verified tech employers across top Indian tech corridors. It provides an intuitive discovery feed, TimesJobs-inspired floating search dock, rich job cards with corporate building photography, verified recruiter PFPs, and role-based application management.
 
 The platform has three user roles: Job Seeker, Recruiter, and Admin.
 

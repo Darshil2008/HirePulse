@@ -1,0 +1,11 @@
+# Python / Environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+env/
+
+# Operating System Files
+.DS_Store
+Thumbs.db

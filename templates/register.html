@@ -1,17 +1,152 @@
 {% extends "base.html" %}
+
+{% block title %}Create Account | HirePulse{% endblock %}
+
 {% block content %}
-<div class="form-box">
-    <h2 class="text-center mb-4">Create Account</h2>
-    <form method="POST">
-        <input name="name" class="form-control mb-3" placeholder="Full Name" required>
-        <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
-        <input type="password" name="password" class="form-control mb-3"
-               placeholder="Password (minimum 8 characters)" minlength="8" required>
-        <select name="role" class="form-select mb-3" required>
-            <option value="job_seeker">Job Seeker</option>
-            <option value="recruiter">Recruiter</option>
-        </select>
-        <button class="btn btn-primary w-100">Register</button>
-    </form>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
+                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
+                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 class="auth-title">Create Account</h2>
+            <p class="auth-subtitle">Join thousands of job seekers and verified recruiters on HirePulse</p>
+        </div>
+
+        <form method="POST" action="/register" id="registerForm" onsubmit="return validateRegisterForm()">
+
+            <!-- Role Selector Cards -->
+            <label class="d-block small fw-bold text-muted mb-2 text-uppercase letter-spacing-1">
+                Select Your Role
+            </label>
+            <div class="role-select-grid">
+                <div class="role-select-card selected" id="roleCardSeeker" onclick="selectRole('job_seeker')">
+                    <input type="radio" name="role" value="job_seeker" checked class="d-none" id="roleSeeker">
+                    <div class="role-select-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                    <div class="role-select-title">Job Seeker</div>
+                    <div class="role-select-sub">Looking for jobs</div>
+                </div>
+
+                <div class="role-select-card" id="roleCardRecruiter" onclick="selectRole('recruiter')">
+                    <input type="radio" name="role" value="recruiter" class="d-none" id="roleRecruiter">
+                    <div class="role-select-icon"><i class="bi bi-building-fill"></i></div>
+                    <div class="role-select-title">Recruiter</div>
+                    <div class="role-select-sub">Hiring talent</div>
+                </div>
+            </div>
+
+            <!-- Full Name -->
+            <div class="auth-input-group">
+                <label for="name">Full Name</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-person auth-field-icon"></i>
+                    <input type="text" id="name" name="name" class="auth-input"
+                           placeholder="e.g. Darshil Patel" required autocomplete="name">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="auth-input-group">
+                <label for="email">Email Address</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-envelope auth-field-icon"></i>
+                    <input type="email" id="email" name="email" class="auth-input"
+                           placeholder="name@example.com" required autocomplete="email">
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="auth-input-group">
+                <label for="password">Password (min 8 characters)</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-lock auth-field-icon"></i>
+                    <input type="password" id="password" name="password" class="auth-input"
+                           placeholder="Create password" required minlength="8" autocomplete="new-password">
+                    <button type="button" class="btn btn-sm btn-link text-muted position-absolute end-0 me-2 text-decoration-none" onclick="togglePasswordVisibility('password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="auth-input-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="auth-field-wrapper">
+                    <i class="bi bi-shield-check auth-field-icon"></i>
+                    <input type="password" id="confirm_password" name="confirm_password" class="auth-input"
+                           placeholder="Re-type password" required autocomplete="new-password">
+                </div>
+                <div id="passwordError" class="text-danger small mt-1 d-none">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Passwords do not match.
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth-submit">
+                Complete Registration →
+            </button>
+
+            <div class="text-center mt-4 pt-3 border-top">
+                <span class="text-muted small">Already have an account?</span>
+                <a href="/login" class="fw-bold text-primary text-decoration-none small ms-1">
+                    Sign in here <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="text-center mt-2">
+                <a href="/" class="text-secondary small text-decoration-none">
+                    <i class="bi bi-arrow-left"></i> Back to Homepage
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+function selectRole(role) {
+    document.getElementById('roleSeeker').checked = (role === 'job_seeker');
+    document.getElementById('roleRecruiter').checked = (role === 'recruiter');
+
+    const cardSeeker = document.getElementById('roleCardSeeker');
+    const cardRecruiter = document.getElementById('roleCardRecruiter');
+
+    if (role === 'job_seeker') {
+        cardSeeker.classList.add('selected');
+        cardRecruiter.classList.remove('selected');
+    } else {
+        cardRecruiter.classList.add('selected');
+        cardSeeker.classList.remove('selected');
+    }
+}
+
+function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
+function validateRegisterForm() {
+    const p1 = document.getElementById('password').value;
+    const p2 = document.getElementById('confirm_password').value;
+    const err = document.getElementById('passwordError');
+
+    if (p1 !== p2) {
+        err.classList.remove('d-none');
+        return false;
+    }
+    err.classList.add('d-none');
+    return true;
+}
+</script>
 {% endblock %}

@@ -1,42 +1,136 @@
 {% extends "base.html" %}
+
+{% block title %}Admin Panel | HirePulse{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">Admin Dashboard</h2>
+<div class="dashboard-layout">
 
-<h4>Job Approval Requests</h4>
-<div class="table-responsive">
-<table class="table table-bordered bg-white align-middle">
-    <tr><th>Title</th><th>Company</th><th>Recruiter</th><th>Status</th><th>Action</th></tr>
-    {% for job in jobs %}
-    <tr>
-        <td>{{ job.title }}</td><td>{{ job.company }}</td><td>{{ job.recruiter }}</td><td>{{ job.status }}</td>
-        <td>
-            {% if job.status == 'pending' %}
-                <div class="d-flex gap-2">
-                    <form method="POST" action="/approve/{{ job.id }}/approved">
-                        <button class="btn btn-success btn-sm">Approve</button>
-                    </form>
-                    <form method="POST" action="/approve/{{ job.id }}/rejected">
-                        <button class="btn btn-danger btn-sm">Reject</button>
-                    </form>
-                </div>
-            {% else %}
-                <span class="text-muted">No action</span>
-            {% endif %}
-        </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="5" class="text-center">No job posts yet.</td></tr>
-    {% endfor %}
-</table>
-</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
+                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
+                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span>HirePulse</span>
+        </a>
 
-<h4 class="mt-5">Registered Users</h4>
-<div class="table-responsive">
-<table class="table table-bordered bg-white">
-    <tr><th>Name</th><th>Email</th><th>Role</th></tr>
-    {% for user in users %}
-    <tr><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ user.role }}</td></tr>
-    {% endfor %}
-</table>
+        <p class="sidebar-label">WORKSPACE</p>
+
+        <a href="/" class="side-link">
+            <i class="bi bi-search"></i> <span>Find Jobs</span>
+        </a>
+        <a href="/dashboard" class="side-link">
+            <i class="bi bi-grid-1x2"></i> <span>My Dashboard</span>
+        </a>
+        <a href="/admin" class="side-link active">
+            <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
+        </a>
+
+        <div class="sidebar-bottom">
+            <a href="/logout" class="side-link">
+                <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <span class="eyebrow">ADMINISTRATION</span>
+                <h2>Job Moderation & Users</h2>
+            </div>
+            <a href="/dashboard" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+        </div>
+
+        <div class="bg-white rounded-3 border p-3 mb-4 shadow-sm">
+            <h5 class="fw-bold mb-3">Job Postings Moderation</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Recruiter</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td>
+                                <strong>{{ job.title }}</strong>
+                                <div class="text-muted small">{{ job.location }} • {{ job.salary }}</div>
+                            </td>
+                            <td>{{ job.company }}</td>
+                            <td>{{ job.recruiter or "System Seed" }}</td>
+                            <td>
+                                {% if job.status == 'approved' %}
+                                    <span class="badge bg-success-subtle text-success">Approved</span>
+                                {% elif job.status == 'pending' %}
+                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">{{ job.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if job.status == 'pending' %}
+                                    <div class="d-inline-flex gap-2">
+                                        <form method="POST" action="/approve/{{ job.id }}/approved">
+                                            <button class="btn btn-sm btn-success">Approve</button>
+                                        </form>
+                                        <form method="POST" action="/approve/{{ job.id }}/rejected">
+                                            <button class="btn btn-sm btn-outline-danger">Reject</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">Live</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">No jobs submitted yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3 border p-3 shadow-sm">
+            <h5 class="fw-bold mb-3">Registered Platform Users</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>#{{ u.id }}</td>
+                            <td><strong>{{ u.name }}</strong></td>
+                            <td>{{ u.email }}</td>
+                            <td><span class="badge bg-secondary-subtle text-secondary">{{ u.role }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="dashboard-footer mt-5">
+            <span>© 2026 HirePulse</span>
+            <span>Built for ambitious engineers and modern tech teams.</span>
+        </footer>
+    </main>
 </div>
 {% endblock %}
