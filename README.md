@@ -33,7 +33,7 @@
 
 ### 1. Clone & Navigate
 ```bash
-git clone https://github.com/darshil2008/Job-Portal.git
+git clone https://github.com/darshil2008/HirePulse.git
 cd "Job-Portal"
 ```
 
