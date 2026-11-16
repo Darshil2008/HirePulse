@@ -115,7 +115,7 @@ def initialize_db():
             INSERT INTO users (name,email,password,role)
             VALUES (?,?,?,?)
         """, (
-            "Darshil Patel",
+            "Darshil Gehlot",
             "seeker@example.com",
             generate_password_hash("seeker123"),
             "job_seeker"
