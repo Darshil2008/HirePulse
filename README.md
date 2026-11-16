@@ -34,7 +34,7 @@
 ### 1. Clone & Navigate
 ```bash
 git clone https://github.com/darshil2008/HirePulse.git
-cd "Job-Portal"
+cd "HirePulse"
 ```
 
 ### 2. Set Up Virtual Environment
