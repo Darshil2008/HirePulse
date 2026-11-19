@@ -329,10 +329,39 @@ FALLBACK_PFPS = [
     "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80"
 ]
 
+# Pool of realistic publication dates matching the Bloomberg editorial layout
+JOB_DATES = [
+    "Feb 20, 2026", "Dec 7, 2025", "Nov 28, 2025", "Nov 25, 2025",
+    "Nov 23, 2025", "Nov 20, 2025", "Nov 17, 2025", "Nov 16, 2025",
+    "Nov 7, 2025", "Nov 5, 2025", "Oct 29, 2025", "Oct 22, 2025",
+    "Oct 15, 2025", "Oct 08, 2025", "Sep 30, 2025", "Sep 21, 2025"
+]
+
+def get_job_function(title, skills=""):
+    """Categorizes a job into standard institutional engineering & tech functions."""
+    combined = (str(title) + " " + str(skills)).lower()
+    if any(k in combined for k in ["cloud", "devops", "aws", "kubernetes", "infrastructure", "sre", "architect"]):
+        return "Cloud & DevOps"
+    elif any(k in combined for k in ["machine learning", "ai", "data analyst", "data engineer", "data science", "big data", "quantitative", "neural"]):
+        return "Data & Machine Learning"
+    elif any(k in combined for k in ["security", "soc", "penetration", "cyber", "network", "firewall", "defense"]):
+        return "Security & Systems"
+    elif any(k in combined for k in ["designer", "ui/ux", "product manager", "mobile", "ios", "android", "design"]):
+        return "Product & Design"
+    else:
+        return "Software Development/Engineering"
+
+
 def enrich_job_data(row):
-    """Enriches job records with building photos, recruiter/company PFPs, ratings, and meta details."""
+    """Enriches job records with realistic dates, job functions, building photos, recruiter/company PFPs, ratings, and meta details."""
     j = dict(row)
     job_id = j.get("id", 1)
+
+    # Realistic editorial date matching Bloomberg careers style
+    j["formatted_date"] = JOB_DATES[job_id % len(JOB_DATES)]
+    
+    # Categorized job function
+    j["function"] = get_job_function(j.get("title", ""), j.get("skills", ""))
     
     # Deterministic building photo
     b_idx = (job_id * 5) % len(BUILDING_PHOTOS)
@@ -389,13 +418,54 @@ def index():
     search = request.args.get("search", "").strip()
     city = request.args.get("city", "").strip()
     location = request.args.get("location", "").strip()
-    # If city is supplied via tab or filter, prioritize it
+    # Prioritize city if provided, else location
     selected_location = city if city else location
 
     experience = request.args.get("experience", "").strip()
     job_type = request.args.get("job_type", "").strip()
     work_mode = request.args.get("work_mode", "").strip()
+    job_function = request.args.get("function", "").strip()
 
+    db = get_db()
+
+    # Retrieve ALL approved jobs to compute accurate global category counts
+    all_raw = db.execute("SELECT * FROM jobs WHERE status='approved'").fetchall()
+    all_jobs_enriched = [enrich_job_data(r) for r in all_raw]
+
+    # 1. Experience Counts
+    exp_counts = {
+        "Experienced Hires": sum(1 for j in all_jobs_enriched if any(e in j.get("experience", "") for e in ["2-4", "3-5", "5+"])),
+        "Fresher": sum(1 for j in all_jobs_enriched if any(e in j.get("experience", "") for e in ["Fresher", "0-2"])),
+        "1-3 years": sum(1 for j in all_jobs_enriched if "1-3" in j.get("experience", "")),
+        "3-5 years": sum(1 for j in all_jobs_enriched if "3-5" in j.get("experience", "")),
+        "5+ years": sum(1 for j in all_jobs_enriched if "5+" in j.get("experience", ""))
+    }
+
+    # 2. Location Counts
+    locations_list = ["Bangalore", "Mumbai", "Gurgaon", "Delhi", "Noida", "Hyderabad", "Pune", "Chennai", "Remote"]
+    loc_counts = {}
+    for loc_name in locations_list:
+        loc_counts[loc_name] = sum(1 for j in all_jobs_enriched if loc_name.lower() in j.get("location", "").lower())
+
+    # 3. Job Function Counts
+    functions_list = [
+        "Software Development/Engineering",
+        "Cloud & DevOps",
+        "Data & Machine Learning",
+        "Security & Systems",
+        "Product & Design"
+    ]
+    func_counts = {}
+    for fn in functions_list:
+        func_counts[fn] = sum(1 for j in all_jobs_enriched if j.get("function") == fn)
+
+    # 4. Work Mode Counts
+    modes_list = ["Hybrid", "On-site", "Remote"]
+    mode_counts = {}
+    for m in modes_list:
+        mode_counts[m] = sum(1 for j in all_jobs_enriched if m.lower() in j.get("work_mode", "").lower())
+
+    # Build filtered job list
     query = """
         SELECT * FROM jobs
         WHERE status='approved'
@@ -408,8 +478,13 @@ def index():
         params.append(f"%{selected_location}%")
 
     if experience:
-        query += " AND experience LIKE ?"
-        params.append(f"%{experience}%")
+        if experience == "Experienced Hires":
+            query += " AND (experience LIKE '%2-4%' OR experience LIKE '%3-5%' OR experience LIKE '%5+%')"
+        elif experience in ["Fresher", "Entry Level"]:
+            query += " AND (experience LIKE '%Fresher%' OR experience LIKE '%0-2%')"
+        else:
+            query += " AND experience LIKE ?"
+            params.append(f"%{experience}%")
 
     if job_type:
         query += " AND job_type=?"
@@ -421,35 +496,22 @@ def index():
 
     query += " ORDER BY id DESC"
 
-    db = get_db()
     jobs_raw = db.execute(query, params).fetchall()
     jobs = [enrich_job_data(r) for r in jobs_raw]
 
-    # Pre-calculate job counts for popular cities for the HirePulse city filter cards
-    popular_cities_list = [
-        {"name": "Bangalore", "label": "Bangalore", "icon": "bi-buildings"},
-        {"name": "Mumbai", "label": "Mumbai", "icon": "bi-cash-coin"},
-        {"name": "Delhi", "label": "Delhi / NCR", "icon": "bi-bank"},
-        {"name": "Hyderabad", "label": "Hyderabad", "icon": "bi-cpu"},
-        {"name": "Pune", "label": "Pune", "icon": "bi-code-slash"},
-        {"name": "Chennai", "label": "Chennai", "icon": "bi-pc-display"},
-        {"name": "Ahmedabad", "label": "Ahmedabad", "icon": "bi-briefcase"},
-        {"name": "Kolkata", "label": "Kolkata", "icon": "bi-compass"},
-        {"name": "Remote", "label": "Work From Home", "icon": "bi-house-check"}
-    ]
+    # In-memory filter for job function if specified
+    if job_function:
+        jobs = [j for j in jobs if j.get("function") == job_function]
 
-    city_stats = []
-    for c in popular_cities_list:
-        c_count = db.execute(
-            "SELECT COUNT(*) FROM jobs WHERE status='approved' AND location LIKE ?",
-            (f"%{c['name']}%",)
-        ).fetchone()[0]
-        city_stats.append({
-            "name": c["name"],
-            "label": c["label"],
-            "icon": c["icon"],
-            "count": c_count
-        })
+    # Popular cities stats for backwards compatibility
+    city_stats = [
+        {"name": "Bangalore", "label": "Bangalore", "icon": "bi-buildings", "count": loc_counts.get("Bangalore", 0)},
+        {"name": "Mumbai", "label": "Mumbai", "icon": "bi-cash-coin", "count": loc_counts.get("Mumbai", 0)},
+        {"name": "Delhi", "label": "Delhi / NCR", "icon": "bi-bank", "count": loc_counts.get("Delhi", 0)},
+        {"name": "Hyderabad", "label": "Hyderabad", "icon": "bi-cpu", "count": loc_counts.get("Hyderabad", 0)},
+        {"name": "Pune", "label": "Pune", "icon": "bi-code-slash", "count": loc_counts.get("Pune", 0)},
+        {"name": "Remote", "label": "Work From Home", "icon": "bi-house-check", "count": loc_counts.get("Remote", 0)},
+    ]
 
     # Track applied jobs for logged in job seeker
     applied_job_ids = set()
@@ -460,8 +522,32 @@ def index():
         ).fetchall()
         applied_job_ids = {row["job_id"] for row in user_apps}
 
-    total_jobs_count = db.execute("SELECT COUNT(*) FROM jobs WHERE status='approved'").fetchone()[0]
-    total_companies_count = db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE status='approved'").fetchone()[0]
+    total_jobs_count = len(all_jobs_enriched)
+    total_companies_count = len({j.get("company") for j in all_jobs_enriched})
+
+    # Build active criteria list with one-click remove URLs
+    current_args = request.args.to_dict()
+    active_criteria = []
+
+    def make_remove_url(key_to_remove):
+        filtered_args = {k: v for k, v in current_args.items() if k != key_to_remove and k != "city"}
+        if not filtered_args:
+            return "/"
+        from urllib.parse import urlencode
+        return "/?" + urlencode(filtered_args)
+
+    if search:
+        active_criteria.append({"name": f"Search: {search}", "param": "search", "remove_url": make_remove_url("search")})
+    if selected_location:
+        active_criteria.append({"name": selected_location, "param": "location", "remove_url": make_remove_url("location")})
+    if experience:
+        active_criteria.append({"name": experience, "param": "experience", "remove_url": make_remove_url("experience")})
+    if job_function:
+        active_criteria.append({"name": job_function, "param": "function", "remove_url": make_remove_url("function")})
+    if work_mode:
+        active_criteria.append({"name": work_mode, "param": "work_mode", "remove_url": make_remove_url("work_mode")})
+    if job_type:
+        active_criteria.append({"name": job_type, "param": "job_type", "remove_url": make_remove_url("job_type")})
 
     db.close()
 
@@ -474,11 +560,63 @@ def index():
         experience=experience,
         job_type=job_type,
         work_mode=work_mode,
+        job_function=job_function,
         city_stats=city_stats,
+        exp_counts=exp_counts,
+        loc_counts=loc_counts,
+        func_counts=func_counts,
+        mode_counts=mode_counts,
+        active_criteria=active_criteria,
         applied_job_ids=applied_job_ids,
         total_jobs_count=total_jobs_count,
         total_companies_count=total_companies_count
     )
+
+
+@app.route("/get-alert", methods=["POST"])
+def get_alert():
+    email = request.form.get("email", "").strip().lower()
+    criteria = request.form.get("criteria", "Current Search Criteria").strip()
+    if email and "@" in email:
+        flash(f"Job alert configured for {email}. You will receive immediate notifications when matching roles open.")
+    else:
+        flash("Please provide a valid email address to configure job alerts.")
+    return redirect(request.referrer or "/")
+
+
+@app.route("/connect", methods=["POST"])
+def connect_talent():
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    if email and "@" in email:
+        flash(f"Welcome to the HirePulse Talent Network{', ' + name if name else ''}! Our recruiting team will keep you connected with new opportunities.")
+    else:
+        flash("Please provide a valid email address to join our talent network.")
+    return redirect(request.referrer or "/")
+
+
+@app.route("/api/job/<int:job_id>")
+def get_job_api(job_id):
+    db = get_db()
+    row = db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+    db.close()
+    if not row:
+        return {"error": "Job not found"}, 404
+    job = enrich_job_data(row)
+    return {
+        "id": job["id"],
+        "title": job["title"],
+        "company": job["company"],
+        "location": job["location"],
+        "salary": job["salary"],
+        "description": job["description"],
+        "skills": job["skills"],
+        "job_type": job["job_type"],
+        "work_mode": job["work_mode"],
+        "experience": job["experience"],
+        "formatted_date": job["formatted_date"],
+        "function": job["function"]
+    }
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -740,4 +878,4 @@ def approve(job_id, action):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

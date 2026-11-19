@@ -128,6 +128,55 @@ class HirePulseTestCase(unittest.TestCase):
         self.assertIn(b"Job submitted successfully", post_resp.data)
         self.assertIn(b"Junior AI Engineer", post_resp.data)
 
+    # 8. Portal Explorer Elements: Criteria, Load More, Corporate Footer
+    def test_08_portal_explorer_elements(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Criteria", response.data)
+        self.assertIn(b"GET ALERT", response.data)
+        self.assertIn(b"CONNECT WITH US", response.data)
+        self.assertIn(b"LOAD MORE", response.data)
+        self.assertIn(b"HirePulse, the global business and technology information and career network", response.data)
+        self.assertIn(b"VALUES", response.data)
+        self.assertIn(b"CAREERS", response.data)
+        self.assertIn(b"PRESS", response.data)
+        self.assertIn(b"REGIONS", response.data)
+
+    # 9. Filter Functionality (Location, Experience, Function)
+    def test_09_bloomberg_filters_and_criteria(self):
+        # Filter by Bangalore
+        resp = self.client.get("/?location=Bangalore")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"Bangalore", resp.data)
+        # Check active criteria pill
+        self.assertIn(b"\xe2\x9c\x95", resp.data)  # ✕ symbol
+        self.assertIn(b"Clear", resp.data)
+
+    # 10. API Job Details Endpoint
+    def test_10_api_job_details(self):
+        response = self.client.get("/api/job/1")
+        self.assertEqual(response.status_code, 200)
+        json_data = response.get_json()
+        self.assertIn("title", json_data)
+        self.assertIn("formatted_date", json_data)
+        self.assertIn("function", json_data)
+
+    # 11. Get Alert & Connect Endpoints
+    def test_11_alert_and_connect_actions(self):
+        alert_resp = self.client.post("/get-alert", data={
+            "email": "subscriber@domain.com",
+            "criteria": "Bangalore Engineering"
+        }, follow_redirects=True)
+        self.assertEqual(alert_resp.status_code, 200)
+        self.assertIn(b"Job alert configured for subscriber@domain.com", alert_resp.data)
+
+        connect_resp = self.client.post("/connect", data={
+            "name": "Darshil Gehlot",
+            "email": "darshil@domain.com"
+        }, follow_redirects=True)
+        self.assertEqual(connect_resp.status_code, 200)
+        self.assertIn(b"Welcome to the HirePulse Talent Network", connect_resp.data)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

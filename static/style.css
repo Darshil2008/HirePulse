@@ -1283,3 +1283,343 @@ body {
         gap: 8px;
     }
 }
+
+/* ============================================================
+   TALENT CRITERIA BANNER & HORIZONTAL ACTIONS (Un-congested)
+   ============================================================ */
+.talent-action-banner {
+    background: linear-gradient(135deg, #14243c 0%, #1e3a5f 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 14px rgba(20, 36, 60, 0.08);
+}
+
+.talent-action-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.talent-action-info .talent-bell-icon {
+    font-size: 26px;
+    color: #ffbe00;
+    flex-shrink: 0;
+}
+
+.talent-action-info strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 750;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.talent-action-info p {
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.talent-action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.btn-banner-alert {
+    background: #2457bd;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-weight: 750;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    padding: 9px 18px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-banner-alert:hover {
+    background: #173f91;
+}
+
+.btn-banner-connect {
+    background: #ffbe00;
+    color: #000000;
+    border: none;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    padding: 9px 18px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-banner-connect:hover {
+    background: #e5ab00;
+}
+
+/* ============================================================
+   ACTIVE CRITERIA STRIP (Clean horizontal dismissable chips)
+   ============================================================ */
+.active-criteria-strip {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(20, 36, 60, 0.03);
+}
+
+.criteria-strip-label {
+    font-size: 12px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--navy-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.criteria-chips-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.criteria-chip-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #edf3ff;
+    color: var(--primary);
+    border: 1px solid #c9d8f4;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.criteria-chip-pill:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.chip-remove-x {
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.criteria-clear-link {
+    font-size: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.criteria-clear-link:hover {
+    color: #ef4444;
+    text-decoration: underline;
+}
+
+/* ============================================================
+   LOAD MORE BUTTON STYLING
+   ============================================================ */
+.bb-job-hidden {
+    display: none !important;
+}
+
+.bb-load-more-wrapper {
+    text-align: center;
+    padding: 32px 0 16px 0;
+}
+
+.bb-btn-load-more {
+    display: inline-block;
+    background: #ffffff;
+    color: var(--navy-dark);
+    border: 2px solid var(--navy-dark);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 11px 48px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.bb-btn-load-more:hover {
+    background: var(--navy-dark);
+    color: #ffffff;
+}
+
+/* ============================================================
+   4. CORPORATE EDITORIAL FOOTER (Requested by User)
+   ============================================================ */
+.bb-corporate-footer {
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
+    margin-top: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.bb-footer-container {
+    max-width: 100%;
+    padding: 0 16px;
+}
+
+.bb-footer-top {
+    padding: 36px 8px 28px 8px;
+}
+
+.bb-footer-top .bb-footer-container {
+    display: flex;
+    gap: 36px;
+}
+
+.bb-footer-brand-col {
+    flex: 1.5;
+}
+
+.bb-footer-blurb {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.65;
+    margin: 0;
+}
+
+.bb-footer-nav-col {
+    flex: 1;
+}
+
+.bb-footer-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: var(--navy-dark);
+    margin: 0 0 14px 0;
+    text-transform: uppercase;
+}
+
+.bb-footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bb-footer-links li {
+    margin-bottom: 9px;
+}
+
+.bb-footer-links a {
+    font-size: 12.5px;
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.12s ease;
+}
+
+.bb-footer-links a:hover {
+    color: var(--navy-dark);
+    text-decoration: underline;
+}
+
+.bb-footer-social {
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 14px 8px;
+}
+
+.bb-social-flex {
+    display: flex;
+    gap: 28px;
+}
+
+.bb-social-link {
+    font-size: 12.5px;
+    color: #4b5563;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.12s ease;
+}
+
+.bb-social-link:hover {
+    color: var(--primary);
+}
+
+.bb-footer-bottom {
+    padding: 20px 8px 28px 8px;
+}
+
+.bb-legal-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bb-legal-text {
+    font-size: 11.5px;
+    color: #6b7280;
+}
+
+.bb-legal-text a {
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.bb-legal-text a:hover {
+    text-decoration: underline;
+}
+
+.bb-legal-sep {
+    margin: 0 6px;
+    color: #d1d5db;
+}
+
+.bb-footer-brand-mark {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--navy-dark);
+    letter-spacing: -0.5px;
+}
+
+@media (max-width: 1200px) {
+    .portal-explorer-layout {
+        flex-direction: column;
+    }
+    .explorer-filters,
+    .explorer-criteria {
+        width: 100%;
+        min-width: 100%;
+    }
+    .bb-footer-top .bb-footer-container {
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+    .bb-footer-brand-col {
+        flex: 100%;
+    }
+}

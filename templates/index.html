@@ -33,6 +33,7 @@
 
             <select name="experience" class="tj-dock-select">
                 <option value="">Any Exp</option>
+                <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>Experienced</option>
                 <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>Fresher</option>
                 <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>1-3 yrs</option>
                 <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>3-5 yrs</option>
@@ -179,6 +180,7 @@
                     <label>EXPERIENCE</label>
                     <select name="experience">
                         <option value="">All Exp</option>
+                        <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>Experienced</option>
                         <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>Fresher</option>
                         <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>1-3 yrs</option>
                         <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>3-5 yrs</option>
@@ -215,7 +217,7 @@
             <div class="stat-card">
                 <span>Available opportunities</span>
                 <strong>{{ jobs|length }}</strong>
-                <small>Matching your search & city</small>
+                <small>Matching your search & filters</small>
             </div>
             <div class="stat-card">
                 <span>Technology fields</span>
@@ -239,14 +241,87 @@
             <span class="result-count">{{ jobs|length }} results found</span>
         </div>
 
-        <!-- FILTERS -->
-        <form action="/" method="GET" class="filter-bar">
-            <input type="hidden" name="search" value="{{ search }}">
-            <input type="hidden" name="location" value="{{ location }}">
-            <input type="hidden" name="experience" value="{{ experience }}">
+        <!-- CRITERIA & TALENT ACTIONS BANNER (Clean, un-congested horizontal bar) -->
+        <div class="talent-action-banner">
+            <div class="talent-action-info">
+                <i class="bi bi-bell-fill talent-bell-icon"></i>
+                <div>
+                    <strong>Job Criteria & Talent Alerts</strong>
+                    <p>Receive immediate alerts when new jobs match your criteria, or connect with our recruiting network.</p>
+                </div>
+            </div>
+            <div class="talent-action-buttons">
+                <button type="button" class="btn-banner-alert" data-bs-toggle="modal" data-bs-target="#bbAlertModal">
+                    <i class="bi bi-bell me-1"></i> GET ALERT
+                </button>
+                <button type="button" class="btn-banner-connect" data-bs-toggle="modal" data-bs-target="#bbConnectModal">
+                    <i class="bi bi-people me-1"></i> CONNECT WITH US
+                </button>
+            </div>
+        </div>
 
+        <!-- ACTIVE CRITERIA STRIP (Shown when any filter is active) -->
+        {% if active_criteria %}
+        <div class="active-criteria-strip">
+            <span class="criteria-strip-label"><i class="bi bi-funnel-fill text-primary"></i> Active Criteria:</span>
+            <div class="criteria-chips-inline">
+                {% for c in active_criteria %}
+                <a href="{{ c.remove_url }}" class="criteria-chip-pill" title="Remove filter: {{ c.name }}">
+                    <span>{{ c.name }}</span>
+                    <span class="chip-remove-x">✕</span>
+                </a>
+                {% endfor %}
+                <a href="/" class="criteria-clear-link">
+                    <i class="bi bi-x-circle me-1"></i> Clear all
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- HORIZONTAL FILTER BAR (Sleek, un-congested dropdowns) -->
+        <form action="/" method="GET" class="filter-bar">
+            {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+            {% if location %}<input type="hidden" name="location" value="{{ location }}">{% endif %}
+
+            <!-- Experience Filter -->
+            <select name="experience" onchange="this.form.submit()">
+                <option value="">All Experience</option>
+                <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>
+                    Experienced Hires ({{ exp_counts.get("Experienced Hires", 0) }})
+                </option>
+                <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>
+                    Fresher / Entry ({{ exp_counts.get("Fresher", 0) }})
+                </option>
+                <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>
+                    1-3 years ({{ exp_counts.get("1-3 years", 0) }})
+                </option>
+                <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>
+                    3-5 years ({{ exp_counts.get("3-5 years", 0) }})
+                </option>
+                <option value="5+ years" {% if experience == '5+ years' %}selected{% endif %}>
+                    5+ years ({{ exp_counts.get("5+ years", 0) }})
+                </option>
+            </select>
+
+            <!-- Job Function Filter -->
+            <select name="function" onchange="this.form.submit()">
+                <option value="">All Job Functions</option>
+                {% for fn_name, fn_label in [
+                    ("Software Development/Engineering", "Software Dev / Eng"),
+                    ("Cloud & DevOps", "Cloud & DevOps"),
+                    ("Data & Machine Learning", "Data & AI / ML"),
+                    ("Security & Systems", "Security & Systems"),
+                    ("Product & Design", "Product & Design")
+                ] %}
+                <option value="{{ fn_name }}" {% if job_function == fn_name %}selected{% endif %}>
+                    {{ fn_label }} ({{ func_counts.get(fn_name, 0) }})
+                </option>
+                {% endfor %}
+            </select>
+
+            <!-- Job Type Filter -->
             <select name="job_type" onchange="this.form.submit()">
-                <option value="">All job types</option>
+                <option value="">All Job Types</option>
                 {% for item in ["Full-time", "Part-time", "Internship", "Contract"] %}
                 <option value="{{ item }}" {% if job_type == item %}selected{% endif %}>
                     {{ item }}
@@ -254,26 +329,27 @@
                 {% endfor %}
             </select>
 
+            <!-- Work Mode Filter -->
             <select name="work_mode" onchange="this.form.submit()">
-                <option value="">All work modes</option>
+                <option value="">All Work Modes</option>
                 {% for item in ["Remote", "Hybrid", "On-site"] %}
                 <option value="{{ item }}" {% if work_mode == item %}selected{% endif %}>
-                    {{ item }}
+                    {{ item }} ({{ mode_counts.get(item, 0) }})
                 </option>
                 {% endfor %}
             </select>
 
-            {% if search or location or experience or job_type or work_mode %}
+            {% if search or location or experience or job_type or work_mode or job_function %}
             <a href="/" class="clear-filter ms-2">
-                <i class="bi bi-x-circle me-1"></i> Clear all filters
+                <i class="bi bi-x-circle me-1"></i> Clear filters
             </a>
             {% endif %}
         </form>
 
-        <!-- JOB CARDS GRID -->
+        <!-- FULL-WIDTH SPACIOUS JOBS GRID (Unconstrained 3-Column Layout) -->
         <section class="jobs-grid">
             {% for job in jobs %}
-            <article class="job-card">
+            <article class="job-card {% if loop.index > 12 %}bb-job-hidden{% endif %}">
                 <!-- Building Photo in Background (Card Cover Banner) -->
                 <div class="job-card-banner">
                     <img src="{{ job.building_img }}" alt="{{ job.company }} Office" class="building-banner-img" loading="lazy">
@@ -307,7 +383,11 @@
                     </div>
 
                     <!-- Job Title -->
-                    <h4 class="job-title-text">{{ job.title }}</h4>
+                    <h4 class="job-title-text">
+                        <a href="javascript:void(0)" onclick="openJobDetail({{ job.id }})" style="color: inherit; text-decoration: none;">
+                            {{ job.title }}
+                        </a>
+                    </h4>
 
                     <!-- Salary Highlight -->
                     <div class="salary-highlight-box">
@@ -322,7 +402,7 @@
                     <div class="job-meta-details">
                         <span><i class="bi bi-geo-alt-fill text-primary"></i> {{ job.location }}</span>
                         <span><i class="bi bi-briefcase-fill text-secondary"></i> {{ job.experience or "Fresher" }}</span>
-                        <span><i class="bi bi-clock text-muted"></i> {{ job.posted_time or "2d ago" }}</span>
+                        <span><i class="bi bi-calendar3 text-muted"></i> {{ job.formatted_date or job.posted_time }}</span>
                     </div>
 
                     <!-- Key Skills Tags -->
@@ -352,7 +432,7 @@
                         {% elif not session.get('user_id') %}
                             <a href="/login" class="apply-button">Login to Apply →</a>
                         {% else %}
-                            <span class="text-muted small">Job seeker access only</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openJobDetail({{ job.id }})">Details</button>
                         {% endif %}
                     </div>
                 </div>
@@ -361,11 +441,20 @@
             <div class="empty-state">
                 <i class="bi bi-search display-5 text-muted mb-3 d-block"></i>
                 <h3>No matching jobs found</h3>
-                <p class="text-muted mb-4">Try changing your search keywords or resetting your city filters.</p>
+                <p class="text-muted mb-4">Try changing your search keywords or resetting your filter criteria.</p>
                 <a href="/" class="search-button">View all jobs</a>
             </div>
             {% endfor %}
         </section>
+
+        <!-- LOAD MORE OPTION -->
+        {% if jobs|length > 12 %}
+        <div class="bb-load-more-wrapper" id="bbLoadMoreWrapper">
+            <button type="button" class="bb-btn-load-more" id="bbLoadMoreBtn" onclick="loadMoreJobs()">
+                LOAD MORE
+            </button>
+        </div>
+        {% endif %}
 
         <!-- TECHNOLOGY SECTION -->
         <section class="technology-section">
@@ -389,13 +478,207 @@
             </div>
         </section>
 
-        <!-- FOOTER -->
-        <footer class="dashboard-footer">
-            <span>© 2026 HirePulse</span>
-            <span>Built for ambitious engineers and modern tech teams.</span>
+        <!-- ============================================================
+             CORPORATE EDITORIAL FOOTER (Requested by User)
+             ============================================================ -->
+        <footer class="bb-corporate-footer">
+            <div class="bb-footer-top">
+                <div class="bb-footer-container">
+                    <!-- Left Brand Overview Blurb -->
+                    <div class="bb-footer-brand-col">
+                        <p class="bb-footer-blurb">
+                            HirePulse, the global business and technology information and career network, gives influential talent and industry leaders a critical edge by connecting them to high-impact engineering, infrastructure, and leadership opportunities. The company’s core strength — delivering transparent intelligence and reliable discovery — drives everything we build.
+                        </p>
+                    </div>
+
+                    <!-- Directory Columns: VALUES, CAREERS, PRESS, REGIONS -->
+                    <div class="bb-footer-nav-col">
+                        <h4 class="bb-footer-title">VALUES</h4>
+                        <ul class="bb-footer-links">
+                            <li><a href="javascript:void(0)">Diversity and Inclusion</a></li>
+                            <li><a href="javascript:void(0)">Tech at HirePulse</a></li>
+                            <li><a href="javascript:void(0)">Philanthropy</a></li>
+                            <li><a href="javascript:void(0)">Sustainability</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="bb-footer-nav-col">
+                        <h4 class="bb-footer-title">CAREERS</h4>
+                        <ul class="bb-footer-links">
+                            <li><a href="javascript:void(0)">What we do</a></li>
+                            <li><a href="javascript:void(0)">Working here</a></li>
+                            <li><a href="javascript:void(0)">Early career</a></li>
+                            <li><a href="javascript:void(0)">Experienced Hires</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="bb-footer-nav-col">
+                        <h4 class="bb-footer-title">PRESS</h4>
+                        <ul class="bb-footer-links">
+                            <li><a href="javascript:void(0)">Press contacts</a></li>
+                            <li><a href="javascript:void(0)">Announcements</a></li>
+                            <li><a href="javascript:void(0)">Research reports</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="bb-footer-nav-col">
+                        <h4 class="bb-footer-title">REGIONS</h4>
+                        <ul class="bb-footer-links">
+                            <li><a href="javascript:void(0)">India</a></li>
+                            <li><a href="javascript:void(0)">Americas</a></li>
+                            <li><a href="javascript:void(0)">EMEA</a></li>
+                            <li><a href="javascript:void(0)">Asia Pacific</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Links Row -->
+            <div class="bb-footer-social">
+                <div class="bb-footer-container bb-social-flex">
+                    <a href="https://linkedin.com/" target="_blank" rel="noopener" class="bb-social-link">
+                        <i class="bi bi-linkedin"></i> LinkedIn
+                    </a>
+                    <a href="https://twitter.com/" target="_blank" rel="noopener" class="bb-social-link">
+                        <i class="bi bi-twitter-x"></i> Twitter
+                    </a>
+                    <a href="https://facebook.com/" target="_blank" rel="noopener" class="bb-social-link">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </a>
+                    <a href="https://instagram.com/" target="_blank" rel="noopener" class="bb-social-link">
+                        <i class="bi bi-instagram"></i> Instagram
+                    </a>
+                    <a href="javascript:void(0)" class="bb-social-link">
+                        <i class="bi bi-rss-fill"></i> RSS
+                    </a>
+                </div>
+            </div>
+
+            <!-- Legal Copyright Row -->
+            <div class="bb-footer-bottom">
+                <div class="bb-footer-container bb-legal-flex">
+                    <div class="bb-legal-text">
+                        © 2026 HirePulse Finance & Technology LP. All rights reserved. 
+                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Privacy</a>
+                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Additional Policies</a>
+                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Accommodation & EEO Policy</a>
+                    </div>
+                    <div class="bb-footer-brand-mark">
+                        HirePulse
+                    </div>
+                </div>
+            </div>
         </footer>
 
     </main>
+</div>
+
+<!-- ============================================================
+     MODALS (Job Details, Get Alert, Connect With Us)
+     ============================================================ -->
+
+<!-- Job Detail Modal -->
+<div class="modal fade" id="bbJobModal" tabindex="-1" aria-labelledby="bbJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom px-4 py-3 bg-light">
+                <div>
+                    <span class="badge bg-primary text-white text-uppercase tracking-wider px-2 py-1 mb-1" id="modalJobFunction" style="font-size: 11px;">Engineering</span>
+                    <h4 class="modal-title fw-bold text-dark mb-0" id="modalJobTitle">Job Title</h4>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <div class="d-flex flex-wrap gap-3 text-muted small mb-3 pb-3 border-bottom">
+                    <div><i class="bi bi-building me-1"></i> <span id="modalJobCompany">Company</span></div>
+                    <div><i class="bi bi-geo-alt me-1"></i> <span id="modalJobLocation">Location</span></div>
+                    <div><i class="bi bi-briefcase me-1"></i> <span id="modalJobType">Full-time</span> (<span id="modalJobMode">Hybrid</span>)</div>
+                    <div><i class="bi bi-cash-stack me-1"></i> <strong class="text-dark" id="modalJobSalary">Salary</strong></div>
+                    <div><i class="bi bi-calendar3 me-1"></i> <span id="modalJobDate">Date</span></div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark text-uppercase small tracking-wide">Role Overview & Description</h6>
+                    <p class="text-secondary mb-0" id="modalJobDesc" style="line-height: 1.7; font-size: 14.5px;"></p>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark text-uppercase small tracking-wide">Required Skills & Technologies</h6>
+                    <div id="modalJobSkills" class="d-flex flex-wrap gap-2 pt-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+                <div id="modalActionContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Get Alert Modal -->
+<div class="modal fade" id="bbAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom px-4 py-3" style="background: #14243c; color: white;">
+                <h5 class="modal-title fw-bold">Receive Career Alerts</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/get-alert" method="POST">
+                <div class="modal-body px-4 py-4">
+                    <p class="text-muted small mb-3">
+                        Subscribe to get immediate email alerts whenever new opportunities matching your active criteria are published.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Active Criteria</label>
+                        <input type="text" class="form-control form-control-sm bg-light" name="criteria"
+                               value="{% if active_criteria %}{% for c in active_criteria %}{{ c.name }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}All Engineering Positions{% endif %}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alertEmail" class="form-label small fw-bold text-dark">Your Work Email</label>
+                        <input type="email" class="form-control" id="alertEmail" name="email"
+                               placeholder="e.g. name@company.com" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">Activate Alert</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Connect With Us Modal -->
+<div class="modal fade" id="bbConnectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom px-4 py-3" style="background: #ffbe00; color: #000000;">
+                <h5 class="modal-title fw-bold">Join HirePulse Talent Network</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/connect" method="POST">
+                <div class="modal-body px-4 py-4">
+                    <p class="text-muted small mb-3">
+                        Join our curated engineering network to stay informed on exclusive senior openings, executive leadership roles, and company initiatives.
+                    </p>
+                    <div class="mb-3">
+                        <label for="talentName" class="form-label small fw-bold text-dark">Full Name</label>
+                        <input type="text" class="form-control" id="talentName" name="name"
+                               placeholder="e.g. Darshil Gehlot" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="talentEmail" class="form-label small fw-bold text-dark">Email Address</label>
+                        <input type="email" class="form-control" id="talentEmail" name="email"
+                               placeholder="e.g. darshil@example.com" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning btn-sm px-4 fw-bold">Connect With Us</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
