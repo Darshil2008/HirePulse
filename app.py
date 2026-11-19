@@ -12,7 +12,8 @@ DB = os.path.join(BASE_DIR, "database.db")
 
 
 def get_db():
-    db = sqlite3.connect(DB)
+    db_path = app.config.get("DATABASE", DB)
+    db = sqlite3.connect(db_path)
     db.row_factory = sqlite3.Row
     return db
 
@@ -483,10 +484,18 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        name = request.form["name"].strip()
-        email = request.form["email"].strip().lower()
-        password = request.form["password"]
-        role = request.form["role"]
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        role = request.form.get("role", "").strip()
+
+        if not name:
+            flash("Name is required")
+            return redirect("/register")
+
+        if not email or "@" not in email:
+            flash("A valid email address is required")
+            return redirect("/register")
 
         if role not in ["job_seeker", "recruiter"]:
             flash("Invalid role")
@@ -520,8 +529,12 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Email and password are required")
+            return redirect("/login")
 
         db = get_db()
         user = db.execute(
@@ -727,4 +740,4 @@ def approve(job_id, action):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)
