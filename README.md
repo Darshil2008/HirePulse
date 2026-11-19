@@ -33,8 +33,8 @@
 
 ### 1. Clone & Navigate
 ```bash
-git clone https://github.com/darshil2008/Job-Portal.git
-cd "Job-Portal"
+git clone https://github.com/darshil2008/HirePulse.git
+cd "HirePulse"
 ```
 
 ### 2. Set Up Virtual Environment
