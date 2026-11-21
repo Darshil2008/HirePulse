@@ -1,35 +1,34 @@
 {% extends "base.html" %}
 
-{% block title %}Sign In | HirePulse{% endblock %}
+{% block title %}Sign In | WorkLane{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
     <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-logo-badge">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
-                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
-                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="text-center mb-4">
+            <span class="nav-brand-mark mx-auto mb-3" style="width: 44px; height: 44px; border-radius: 12px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
                 </svg>
-            </div>
-            <h2 class="auth-title">Welcome to HirePulse</h2>
-            <p class="auth-subtitle">Sign in to your HirePulse account to continue</p>
+            </span>
+            <h1 class="auth-title">Welcome to WorkLane</h1>
+            <p class="auth-subtitle">Sign in to your candidate or recruiter chamber</p>
         </div>
 
         <!-- 1-Click Demo Login Pills -->
-        <div class="demo-pills-box">
-            <div class="demo-pills-label">
-                <i class="bi bi-lightning-charge-fill text-warning"></i> Quick Demo Fill (1-Click):
+        <div class="p-3 border border-2 border-dark rounded-3 mb-4" style="background:#ffffff;">
+            <div class="small fw-bold text-uppercase mb-2" style="font-size:11px; letter-spacing:1px; color:var(--color-fog);">
+                <span class="ember-dot me-1"></span> Quick Demo Access (1-Click):
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <button type="button" class="demo-btn" onclick="fillDemo('seeker@example.com', 'seeker123')">
+                <button type="button" class="btn-secondary-outline py-1 px-2 small" onclick="fillDemo('seeker@example.com', 'seeker123')">
                     <i class="bi bi-person me-1"></i> Job Seeker
                 </button>
-                <button type="button" class="demo-btn" onclick="fillDemo('recruiter@technova.com', 'recruiter123')">
+                <button type="button" class="btn-secondary-outline py-1 px-2 small" onclick="fillDemo('recruiter@technova.com', 'recruiter123')">
                     <i class="bi bi-building me-1"></i> Recruiter
                 </button>
-                <button type="button" class="demo-btn" onclick="fillDemo('admin@hirepulse.com', 'admin123')">
+                <button type="button" class="btn-secondary-outline py-1 px-2 small" onclick="fillDemo('admin@worklane.com', 'admin123')">
                     <i class="bi bi-shield-lock me-1"></i> Admin
                 </button>
             </div>
@@ -38,11 +37,11 @@
         <!-- Login Form -->
         <form method="POST" action="/login">
             <div class="auth-input-group">
-                <label for="email">Email Address</label>
+                <label for="email">Work or Personal Email</label>
                 <div class="auth-field-wrapper">
                     <i class="bi bi-envelope auth-field-icon"></i>
                     <input type="email" id="email" name="email" class="auth-input"
-                           placeholder="name@company.com" required autocomplete="email">
+                           placeholder="name@example.com" required autocomplete="email">
                 </div>
             </div>
 
@@ -58,19 +57,19 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-auth-submit">
-                Sign In to HirePulse →
+            <button type="submit" class="btn-primary-cta w-100 py-3 mt-2 justify-content-center">
+                Sign In to WorkLane →
             </button>
 
-            <div class="text-center mt-4 pt-3 border-top">
-                <span class="text-muted small">New to HirePulse?</span>
-                <a href="/register" class="fw-bold text-primary text-decoration-none small ms-1">
-                    Create an account <i class="bi bi-arrow-right"></i>
+            <div class="text-center mt-4 pt-3 border-top border-2 border-dark">
+                <span class="text-muted small">New to WorkLane?</span>
+                <a href="/register" class="fw-bold text-dark text-decoration-underline small ms-1">
+                    Create an account
                 </a>
             </div>
 
-            <div class="text-center mt-2">
-                <a href="/" class="text-secondary small text-decoration-none">
+            <div class="text-center mt-3">
+                <a href="/" class="small text-muted text-decoration-none">
                     <i class="bi bi-arrow-left"></i> Back to Homepage
                 </a>
             </div>
@@ -97,5 +96,6 @@ function togglePasswordVisibility(fieldId, btn) {
         icon.classList.add('bi-eye');
     }
 }
+
 </script>
 {% endblock %}

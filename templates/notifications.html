@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications | WorkLane{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
+                </svg>
+            </span>
+            <span>WorkLane</span>
+        </a>
+
+        <p class="sidebar-label">WORKSPACE</p>
+
+        <a href="/" class="side-link">
+            <i class="bi bi-compass"></i> <span>Explore Opportunities</span>
+        </a>
+        <a href="/dashboard" class="side-link">
+            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
+        </a>
+        <a href="/profile" class="side-link">
+            <i class="bi bi-person-badge"></i> <span>My Profile</span>
+        </a>
+        <a href="/notifications" class="side-link active">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+            {% if unread_notifications_count > 0 %}
+            <span class="ember-dot ms-auto"></span>
+            {% endif %}
+        </a>
+
+        {% if session.get('role') == 'recruiter' %}
+        <a href="/post-job" class="side-link">
+            <i class="bi bi-plus-circle"></i> <span>Publish Role</span>
+        </a>
+        {% endif %}
+
+        {% if session.get('role') == 'admin' %}
+        <a href="/admin" class="side-link">
+            <i class="bi bi-shield-check"></i> <span>Trust & Safety</span>
+        </a>
+        {% endif %}
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-help">
+                <strong>Activity Center</strong>
+                <p class="small text-muted mb-0">Stay informed on application reviews, interviews, and role invitations.</p>
+            </div>
+            <a href="/logout" class="side-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN NOTIFICATIONS CONTAINER -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <span class="eyebrow">COMMUNICATION & ALERTS</span>
+                <h2 class="fw-bold text-dark mb-0">Notifications</h2>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if notifications %}
+                <form action="/notifications/read-all" method="POST">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm fw-semibold">
+                        <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                    </button>
+                </form>
+                {% endif %}
+                <a href="/dashboard" class="btn btn-primary btn-sm fw-semibold">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-10 col-xl-9">
+                {% if notifications %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for n in notifications %}
+                        <div class="card border rounded-3 p-3 shadow-sm transition-all {% if not n.is_read %}border-primary bg-primary-subtle bg-opacity-10{% else %}bg-white{% endif %}">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle {% if not n.is_read %}bg-primary text-white{% else %}bg-light text-muted{% endif %} d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; min-width: 38px;">
+                                    <i class="bi bi-bell-fill"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <h6 class="fw-bold mb-0 text-dark">{{ n.title }}</h6>
+                                        <span class="text-muted small">{{ n.created_at }}</span>
+                                    </div>
+                                    <p class="text-secondary small mb-2">{{ n.message }}</p>
+                                    
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% if n.link %}
+                                        <a href="{{ n.link }}" class="btn btn-sm btn-primary py-1 px-3 text-white fw-semibold small text-decoration-none">
+                                            View Details <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                        {% endif %}
+                                        
+                                        {% if not n.is_read %}
+                                        <form action="/notifications/read/{{ n.id }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-link btn-sm text-muted p-0 text-decoration-none small">
+                                                Mark as read
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="badge bg-light text-muted small border">Read</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white border rounded-3 p-5 text-center shadow-sm">
+                        <div class="mb-3">
+                            <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">You're all caught up!</h5>
+                        <p class="text-muted small mx-auto" style="max-width: 420px;">
+                            No new notifications right now. When recruiters review your applications, update your status, or schedule interviews, you'll see them right here.
+                        </p>
+                        <a href="/" class="btn btn-primary btn-sm px-4 fw-semibold mt-2">
+                            Explore Open Roles
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <footer class="dashboard-footer mt-5">
+            <span>© 2026 WorkLane LP. All rights reserved.</span>
+            <span>Intelligent career discovery and verified recruitment architecture.</span>
+        </footer>
+    </main>
+
+</div>
+{% endblock %}

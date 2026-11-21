@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Panel | HirePulse{% endblock %}
+{% block title %}Trust & Safety Administration | WorkLane{% endblock %}
 
 {% block content %}
 <div class="dashboard-layout">
@@ -9,30 +9,29 @@
     <aside class="sidebar">
         <a href="/" class="brand">
             <span class="brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
-                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
-                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
                 </svg>
             </span>
-            <span>HirePulse</span>
+            <span>WorkLane</span>
         </a>
 
         <p class="sidebar-label">WORKSPACE</p>
 
         <a href="/" class="side-link">
-            <i class="bi bi-search"></i> <span>Find Jobs</span>
+            <i class="bi bi-compass"></i> <span>Explore Opportunities</span>
         </a>
         <a href="/dashboard" class="side-link">
-            <i class="bi bi-grid-1x2"></i> <span>My Dashboard</span>
+            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
         </a>
         <a href="/admin" class="side-link active">
-            <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
+            <i class="bi bi-shield-check"></i> <span>Trust & Safety</span>
         </a>
 
         <div class="sidebar-bottom">
-            <a href="/logout" class="side-link">
-                <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+            <a href="/logout" class="side-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>
             </a>
         </div>
     </aside>
@@ -41,23 +40,89 @@
     <main class="main-content">
         <div class="topbar">
             <div>
-                <span class="eyebrow">ADMINISTRATION</span>
-                <h2>Job Moderation & Users</h2>
+                <span class="eyebrow">TRUST & SAFETY DASHBOARD</span>
+                <h2 class="fw-bold text-dark mb-0">Platform Moderation & Security</h2>
             </div>
-            <a href="/dashboard" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+            <a href="/dashboard" class="btn btn-outline-secondary btn-sm fw-semibold">Back to Dashboard</a>
         </div>
 
-        <div class="bg-white rounded-3 border p-3 mb-4 shadow-sm">
-            <h5 class="fw-bold mb-3">Job Postings Moderation</h5>
+        <!-- 1. TRUST & SAFETY: REPORTED LISTINGS -->
+        <div class="bg-white rounded-3 border p-4 mb-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark"><i class="bi bi-flag-fill text-danger me-2"></i>Reported Job Postings</h5>
+                    <p class="text-muted small mb-0">Listings flagged by candidates for policy review or spam detection.</p>
+                </div>
+                <span class="badge bg-danger-subtle text-danger px-3 py-2 fw-semibold">
+                    {{ reports|length }} Open Reports
+                </span>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Title</th>
+                            <th>Reported Job</th>
+                            <th>Company</th>
+                            <th>Report Reason</th>
+                            <th>Reported By</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reports %}
+                        <tr>
+                            <td>
+                                <strong>{{ r.job_title }}</strong>
+                                <div class="text-muted small">Job ID #{{ r.job_id }}</div>
+                            </td>
+                            <td>{{ r.job_company }}</td>
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger p-2 text-wrap text-start">
+                                    {{ r.reason }}
+                                </span>
+                            </td>
+                            <td>{{ r.reporter_name or "Anonymous / System" }}</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <form method="POST" action="/admin/dismiss-report/{{ r.id }}">
+                                        <button class="btn btn-sm btn-outline-secondary" title="Dismiss Report">
+                                            Dismiss
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="/approve/{{ r.job_id }}/rejected">
+                                        <button class="btn btn-sm btn-danger" title="Take down listing">
+                                            Remove Job
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-shield-check text-success fs-3 d-block mb-1"></i>
+                                No active reports! The platform is clean.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. JOB POSTINGS MODERATION -->
+        <div class="bg-white rounded-3 border p-4 mb-4 shadow-sm">
+            <h5 class="fw-bold mb-3 text-dark">Job Postings Moderation</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title & Location</th>
                             <th>Company</th>
                             <th>Recruiter</th>
                             <th>Status</th>
-                            <th class="text-end">Action</th>
+                            <th class="text-end">Moderation Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,9 +136,11 @@
                             <td>{{ job.recruiter or "System Seed" }}</td>
                             <td>
                                 {% if job.status == 'approved' %}
-                                    <span class="badge bg-success-subtle text-success">Approved</span>
+                                    <span class="badge bg-success-subtle text-success">Live</span>
                                 {% elif job.status == 'pending' %}
-                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                    <span class="badge bg-warning-subtle text-warning">Pending Review</span>
+                                {% elif job.status == 'paused' %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Paused</span>
                                 {% else %}
                                     <span class="badge bg-danger-subtle text-danger">{{ job.status }}</span>
                                 {% endif %}
@@ -89,7 +156,9 @@
                                         </form>
                                     </div>
                                 {% else %}
-                                    <span class="text-muted small">Live</span>
+                                    <form method="POST" action="/approve/{{ job.id }}/rejected" class="d-inline">
+                                        <button class="btn btn-sm btn-outline-secondary py-0">Suspend</button>
+                                    </form>
                                 {% endif %}
                             </td>
                         </tr>
@@ -101,8 +170,9 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-3 border p-3 shadow-sm">
-            <h5 class="fw-bold mb-3">Registered Platform Users</h5>
+        <!-- 3. REGISTERED USERS & VERIFICATION -->
+        <div class="bg-white rounded-3 border p-4 shadow-sm">
+            <h5 class="fw-bold mb-3 text-dark">Registered Platform Users & Recruiter Verification</h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -111,6 +181,8 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Verification Status</th>
+                            <th class="text-end">Verification Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,6 +192,24 @@
                             <td><strong>{{ u.name }}</strong></td>
                             <td>{{ u.email }}</td>
                             <td><span class="badge bg-secondary-subtle text-secondary">{{ u.role }}</span></td>
+                            <td>
+                                {% if u.is_verified %}
+                                    <span class="badge bg-success-subtle text-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">Standard</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if u.role == 'recruiter' %}
+                                <form method="POST" action="/admin/verify-recruiter/{{ u.id }}" class="d-inline">
+                                    <button class="btn btn-sm {% if u.is_verified %}btn-outline-danger{% else %}btn-outline-primary{% endif %} py-1">
+                                        {% if u.is_verified %}Revoke Verification{% else %}Verify Recruiter{% endif %}
+                                    </button>
+                                </form>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -128,8 +218,8 @@
         </div>
 
         <footer class="dashboard-footer mt-5">
-            <span>© 2026 HirePulse</span>
-            <span>Built for ambitious engineers and modern tech teams.</span>
+            <span>© 2026 WorkLane LP. All rights reserved.</span>
+            <span>Intelligent career discovery and verified recruitment architecture.</span>
         </footer>
     </main>
 </div>

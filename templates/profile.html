@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile & Career Toolkit | WorkLane{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
+                </svg>
+            </span>
+            <span>WorkLane</span>
+        </a>
+
+        <p class="sidebar-label">WORKSPACE</p>
+
+        <a href="/" class="side-link">
+            <i class="bi bi-compass"></i> <span>Explore Opportunities</span>
+        </a>
+        <a href="/dashboard" class="side-link">
+            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
+        </a>
+        <a href="/profile" class="side-link active">
+            <i class="bi bi-person-badge"></i> <span>My Profile</span>
+        </a>
+        <a href="/notifications" class="side-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+            {% if unread_notifications_count > 0 %}
+            <span class="ember-dot ms-auto"></span>
+            {% endif %}
+        </a>
+
+        {% if session.get('role') == 'recruiter' %}
+        <a href="/post-job" class="side-link">
+            <i class="bi bi-plus-circle"></i> <span>Publish Role</span>
+        </a>
+        {% endif %}
+
+        {% if session.get('role') == 'admin' %}
+        <a href="/admin" class="side-link">
+            <i class="bi bi-shield-check"></i> <span>Trust & Safety</span>
+        </a>
+        {% endif %}
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-help">
+                <strong>Profile Strength</strong>
+                <p class="small text-muted mb-0">High-completeness profiles receive 3.4x more interview invitations.</p>
+            </div>
+            <a href="/logout" class="side-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN PROFILE FORM -->
+    <main class="main-content">
+        <div class="topbar">
+            <div>
+                <span class="eyebrow">CAREER IDENTITY & TOOLKIT</span>
+                <h2 class="fw-bold text-dark mb-0">Profile & Credentials</h2>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/dashboard" class="btn btn-outline-secondary btn-sm fw-semibold">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Profile Form -->
+            <div class="col-lg-8">
+                <div class="bg-white rounded-3 border p-4 shadow-sm mb-4">
+                    <h5 class="fw-bold text-dark mb-3">General Information</h5>
+
+                    <form method="POST" action="/profile">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="name" value="{{ user.get('name', '') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark d-flex align-items-center justify-content-between">
+                                    <span>Email Address</span>
+                                    {% if user.get('auth_provider') == 'google' %}
+                                    <span class="badge bg-white text-dark border border-1 border-dark" style="font-size: 11px;">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" class="me-1">
+                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                        </svg>
+                                        Google Verified
+                                    </span>
+                                    {% endif %}
+                                </label>
+                                <input type="email" class="form-control bg-light" value="{{ user.get('email', '') }}" readonly>
+                                <small class="text-muted">Managed via account security</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Professional Headline</label>
+                                <input type="text" class="form-control" name="headline" value="{{ user.get('headline', '') }}" placeholder="e.g. Senior Backend Engineer • Python, Distributed Systems, Cloud">
+                                <small class="text-muted">Displayed prominently to hiring teams alongside your match percentage.</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">About & Career Summary</label>
+                                <textarea class="form-control" name="bio" rows="3" placeholder="Briefly describe your core expertise, past impact, and target roles...">{{ user.get('bio', '') }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Current Location</label>
+                                <input type="text" class="form-control" name="location" value="{{ user.get('location', '') }}" placeholder="e.g. Bangalore, India">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Phone Number</label>
+                                <input type="text" class="form-control" name="phone" value="{{ user.get('phone', '') }}" placeholder="e.g. +91 98765 43210">
+                            </div>
+
+                            {% if session.get('role') == 'job_seeker' %}
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Years of Experience</label>
+                                <input type="number" class="form-control" name="experience_years" min="0" max="40" value="{{ user.get('experience_years', 0) }}">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Technical Skills (Comma Separated)</label>
+                                <input type="text" class="form-control" name="skills" value="{{ user.get('skills', '') }}" placeholder="e.g. Python, Flask, React, PostgreSQL, Docker, AWS, Git">
+                                <div class="mt-2 d-flex flex-wrap gap-1">
+                                    {% if user.get('skills') %}
+                                        {% for s in user.get('skills', '').split(',') %}
+                                            {% if s.strip() %}
+                                            <span class="badge bg-light text-dark border px-2 py-1 small">{{ s.strip() }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <small class="text-muted">Add comma-separated skills to activate live job match scores!</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">Portfolio & Online Presence</h6>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-github me-1"></i> GitHub URL</label>
+                                <input type="url" class="form-control" name="github_url" value="{{ user.get('github_url', '') }}" placeholder="https://github.com/username">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-linkedin me-1"></i> LinkedIn URL</label>
+                                <input type="url" class="form-control" name="linkedin_url" value="{{ user.get('linkedin_url', '') }}" placeholder="https://linkedin.com/in/username">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-globe me-1"></i> Portfolio Website</label>
+                                <input type="url" class="form-control" name="portfolio_url" value="{{ user.get('portfolio_url', '') }}" placeholder="https://myportfolio.dev">
+                            </div>
+                            {% endif %}
+
+                            {% if session.get('role') == 'recruiter' %}
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">Company & Talent Brand Information</h6>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Company Name</label>
+                                <input type="text" class="form-control" name="company_name" value="{{ user.get('company_name', '') }}" placeholder="e.g. TechNova Solutions">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Company Website</label>
+                                <input type="url" class="form-control" name="company_website" value="{{ user.get('company_website', '') }}" placeholder="https://company.example.com">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Company Description</label>
+                                <textarea class="form-control" name="company_description" rows="3" placeholder="Describe your team, engineering culture, and mission...">{{ user.get('company_description', '') }}</textarea>
+                            </div>
+                            {% endif %}
+
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                    <i class="bi bi-check2-circle me-1"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Profile Strength & Tips -->
+            <div class="col-lg-4">
+                <div class="card border rounded-3 p-4 shadow-sm mb-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold mb-0 text-dark">Profile Strength</h6>
+                        <span class="badge {% if profile_strength.percentage >= 80 %}bg-success{% elif profile_strength.percentage >= 50 %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-2 py-1">
+                            {{ profile_strength.percentage }}%
+                        </span>
+                    </div>
+
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar {% if profile_strength.percentage >= 80 %}bg-success{% elif profile_strength.percentage >= 50 %}bg-warning{% else %}bg-primary{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ profile_strength.percentage }}%;" 
+                             aria-valuenow="{{ profile_strength.percentage }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100"></div>
+                    </div>
+
+                    <h6 class="small fw-bold text-secondary text-uppercase mb-2">Optimization Recommendations</h6>
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                        {% for tip in profile_strength.tips %}
+                        <li class="small d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle text-primary mt-1"></i>
+                            <span>{{ tip }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Career Toolkit Box -->
+                <div class="card border rounded-3 p-4 shadow-sm bg-light">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-shield-check text-success me-1"></i> Verified Candidate Guarantee</h6>
+                    <p class="small text-muted mb-0">
+                        WorkLane verifies active profiles to ensure candidate privacy and eliminate recruiter ghosting. Your contact details are only disclosed to recruiters whose interviews you accept.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="dashboard-footer mt-5">
+            <span>© 2026 WorkLane LP. All rights reserved.</span>
+            <span>Intelligent career discovery and verified recruitment architecture.</span>
+        </footer>
+    </main>
+
+</div>
+{% endblock %}

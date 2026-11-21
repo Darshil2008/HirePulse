@@ -1,616 +1,792 @@
 {% extends "base.html" %}
 
-{% block title %}HirePulse | Career Discovery Platform{% endblock %}
+{% block title %}WorkLane — Cream Broadsheet Career Discovery{% endblock %}
 
 {% block content %}
 
 <!-- ============================================================
-     HIREPULSE SCROLL DOCK (Floats down when you scroll)
+     FLOATING NAVIGATION PILL (Signature 9999px Cream Pill with 2px ink border)
      ============================================================ -->
-<div class="tj-scroll-dock" id="tjScrollDock">
-    <div class="tj-dock-inner">
-        <a href="/" class="tj-dock-brand">
-            <span class="brand-icon" style="width: 30px; height: 30px;">
+<div class="floating-nav-pill-wrapper">
+    <nav class="floating-nav-pill">
+        <a href="/" class="nav-brand">
+            <span class="nav-brand-mark">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
-                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
-                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
                 </svg>
             </span>
-            <span>HirePulse</span>
+            <span>WorkLane</span>
         </a>
 
-        <!-- Fast Filter Dock Form -->
-        <form action="/" method="GET" class="tj-dock-form">
-            <input type="text" name="search" value="{{ search }}" class="tj-dock-input" placeholder="Search title, skills or company...">
+        <ul class="nav-menu d-none d-md-flex">
+            <li><a href="#opportunities" class="nav-link-item active">Opportunities</a></li>
+            <li><a href="/video-tour" class="nav-link-item text-danger fw-semibold"><i class="bi bi-play-circle-fill me-1"></i> 2-Min Tour</a></li>
+            <li><a href="#philosophy" class="nav-link-item">Philosophy</a></li>
+            <li><a href="#network" class="nav-link-item">Talent Network</a></li>
+        </ul>
 
-            <select name="location" class="tj-dock-select">
-                <option value="">All Cities</option>
-                {% for c in ["Bangalore", "Mumbai", "Delhi", "Gurgaon", "Noida", "Hyderabad", "Pune", "Chennai", "Ahmedabad", "Remote"] %}
-                <option value="{{ c }}" {% if location and c.lower() in location.lower() %}selected{% endif %}>{{ c }}</option>
-                {% endfor %}
-            </select>
+        <div class="nav-actions">
+            {% if session.get('user_id') %}
+                <a href="/notifications" class="btn-ghost position-relative py-1 px-2" title="Notifications">
+                    <i class="bi bi-bell fs-5"></i>
+                    {% if unread_notifications_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle ember-dot"></span>
+                    {% endif %}
+                </a>
+                
+                <!-- User Profile Dropdown Pill -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-dark rounded-pill py-1 px-2 d-flex align-items-center gap-2 border-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background:#ffffff; border-color:#1a1a1a;">
+                        {% if session.get('avatar_url') %}
+                        <img src="{{ session.get('avatar_url') }}" alt="{{ session.get('name') }}" class="rounded-circle" style="width:26px; height:26px; object-fit:cover;">
+                        {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:26px; height:26px; background:#f0d7ff; color:#1a1a1a; font-size:12px;">{{ session.get('name', 'U')[0]|upper }}</div>
+                        {% endif %}
+                        <span class="small fw-semibold d-none d-sm-inline" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ session.get('name') }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-2 border-dark rounded-4 p-2 mt-2" style="min-width:240px; background:#ffffff;">
+                        <li class="px-3 py-2 border-bottom border-1 border-secondary-subtle mb-1">
+                            <div class="fw-bold text-dark text-truncate">{{ session.get('name') }}</div>
+                            <div class="small text-muted text-truncate">{{ session.get('email', '') }}</div>
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="badge rounded-pill bg-light text-dark border small" style="font-size:10px;">{{ session.get('role', '')|replace('_', ' ')|title }}</span>
+                            </div>
+                        </li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/dashboard"><i class="bi bi-grid-1x2 me-2"></i> Workspace Dashboard</a></li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/profile"><i class="bi bi-person-badge me-2"></i> Profile & Career Toolkit</a></li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item rounded-3 py-2 text-danger fw-semibold" href="/logout"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login" class="btn-ghost small">Sign In</a>
+                <a href="/register" class="btn-primary-cta py-2 px-3 small">
+                    Join WorkLane →
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</div>
 
-            <select name="experience" class="tj-dock-select">
-                <option value="">Any Exp</option>
-                <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>Experienced</option>
-                <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>Fresher</option>
-                <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>1-3 yrs</option>
-                <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>3-5 yrs</option>
-                <option value="5+ years" {% if experience == '5+ years' %}selected{% endif %}>5+ yrs</option>
-            </select>
+<div class="page-container">
 
-            <button type="submit" class="tj-dock-btn">
-                <i class="bi bi-search"></i> Search
+    <!-- ============================================================
+         HERO SECTION: EDITORIAL BROADSHEET (64–96px EB Garamond at weight 400)
+         ============================================================ -->
+    <header class="text-center py-4 mb-4">
+        <!-- Live Audio / Frequency Waveform Visualizer -->
+        <div class="d-inline-flex align-items-center gap-2 mb-3">
+            <span class="badge-forest">
+                <span class="ember-dot me-1"></span> Live Engineering Network
+            </span>
+            <div class="waveform-visualizer" title="WorkLane Active Signal">
+                <span class="waveform-bar"></span>
+                <span class="waveform-bar"></span>
+                <span class="waveform-bar"></span>
+                <span class="waveform-bar"></span>
+                <span class="waveform-bar"></span>
+            </div>
+        </div>
+
+        <!-- Display Headline in EB Garamond Regular (400) commanding through scale -->
+        <h1 style="font-size: clamp(48px, 6vw, 92px); line-height: 0.95; letter-spacing: -2.5px; max-width: 980px; margin: 12px auto 20px;">
+            Find your direction. Build your 
+            <span class="hand-drawn-underline">
+                lane.
+                <svg viewBox="0 0 140 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 13C38 3 85 4 136 11" stroke="#f0d7ff" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+            </span>
+        </h1>
+
+        <!-- Subtitle in Figtree -->
+        <p style="font-size: clamp(17px, 2vw, 21px); color: var(--color-fog); max-width: 680px; margin: 0 auto 32px; line-height: 1.45;">
+            An editorial career broadsheet connecting verified software engineers and systems architects with high-impact technical teams.
+        </p>
+
+        <!-- CTA Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+            <a href="#opportunities" class="btn-primary-cta">
+                <i class="bi bi-arrow-down me-1"></i> Explore Open Positions ({{ total_jobs_count }})
+            </a>
+            <a href="/video-tour" class="btn-secondary-outline text-decoration-none">
+                <i class="bi bi-play-circle-fill text-danger me-1"></i> Watch 2-Min Tour
+            </a>
+            <button type="button" class="btn-secondary-outline" data-bs-toggle="modal" data-bs-target="#bbConnectModal">
+                <i class="bi bi-people me-1"></i> Join Talent Network
+            </button>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         SEARCH & FILTER CHAMBER
+         Cream container, 32px radius, 2px Vast Ink borders
+         ============================================================ -->
+    <section class="search-chamber" id="search-section">
+        <form action="/" method="GET" class="search-grid-form">
+            <div class="input-field-group">
+                <label>Technical Stack, Role or Company</label>
+                <input type="text" name="search" value="{{ search }}" class="wispr-input" placeholder="e.g. Python, Distributed Systems, TechNova">
+            </div>
+
+            <div class="input-field-group">
+                <label>Target Hub / Location</label>
+                <select name="location" class="wispr-select">
+                    <option value="">All Locations</option>
+                    {% for c in ["Bangalore", "Mumbai", "Delhi", "Gurgaon", "Noida", "Hyderabad", "Pune", "Chennai", "Remote"] %}
+                    <option value="{{ c }}" {% if location and c.lower() in location.lower() %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="input-field-group">
+                <label>Experience Tier</label>
+                <select name="experience" class="wispr-select">
+                    <option value="">All Tiers</option>
+                    <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>Experienced</option>
+                    <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>Fresher / Entry</option>
+                    <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>1-3 years</option>
+                    <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>3-5 years</option>
+                    <option value="5+ years" {% if experience == '5+ years' %}selected{% endif %}>5+ years</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary-cta" style="height: 50px;">
+                <i class="bi bi-search me-1"></i> Search Roles
             </button>
         </form>
 
-        <!-- Quick City Pills in Dock -->
-        <div class="tj-dock-cities">
-            <a href="/?location=Bangalore" class="tj-dock-city-chip {% if location == 'Bangalore' %}active{% endif %}">Bangalore</a>
-            <a href="/?location=Mumbai" class="tj-dock-city-chip {% if location == 'Mumbai' %}active{% endif %}">Mumbai</a>
-            <a href="/?location=Remote" class="tj-dock-city-chip {% if location == 'Remote' %}active{% endif %}">Remote</a>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================
-     ORIGINAL DASHBOARD LAYOUT (Sidebar + Main Content)
-     ============================================================ -->
-<div class="dashboard-layout">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <a href="/" class="brand">
-            <span class="brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
-                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
-                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </span>
-            <span>HirePulse</span>
-        </a>
-
-        <p class="sidebar-label">WORKSPACE</p>
-
-        <a href="/" class="side-link active">
-            <i class="bi bi-search"></i> <span>Find Jobs</span>
-        </a>
-        <a href="/dashboard" class="side-link">
-            <i class="bi bi-grid-1x2"></i> <span>My Dashboard</span>
-        </a>
-
-        {% if session.get('role') == 'job_seeker' %}
-        <a href="/dashboard" class="side-link">
-            <i class="bi bi-send-check"></i> <span>My Applications</span>
-        </a>
-        {% endif %}
-
-        {% if session.get('role') == 'recruiter' %}
-        <a href="/post-job" class="side-link">
-            <i class="bi bi-plus-circle"></i> <span>Post a Job</span>
-        </a>
-        {% endif %}
-
-        {% if session.get('role') == 'admin' %}
-        <a href="/admin" class="side-link">
-            <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
-        </a>
-        {% endif %}
-
-        <div class="sidebar-bottom">
-            <div class="sidebar-help">
-                <strong>Need career help?</strong>
-                <p>Filter roles by your city, skills, and experience level.</p>
-            </div>
-            {% if session.get('user_id') %}
-                <a href="/logout" class="side-link">
-                    <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
-                </a>
-            {% else %}
-                <a href="/login" class="side-link">
-                    <i class="bi bi-box-arrow-in-right"></i> <span>Login</span>
-                </a>
-            {% endif %}
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-
-        <!-- TOP BAR -->
-        <div class="topbar">
-            <div>
-                <span class="eyebrow">CAREER DISCOVERY</span>
-                <h2>Find your next opportunity.</h2>
-            </div>
-
-            <div class="top-profile">
-                {% if session.get('user_id') %}
-                    <div class="avatar">{{ session.get('name', 'U')[0]|upper }}</div>
-                    <div>
-                        <strong>{{ session.get('name') }}</strong>
-                        <small>{{ session.get('role')|replace('_', ' ')|title }}</small>
-                    </div>
-                {% else %}
-                    <a href="/login" class="btn btn-outline-primary btn-sm px-3 fw-semibold me-2">Sign in</a>
-                    <a href="/register" class="btn btn-primary btn-sm px-3 fw-semibold">Register Free</a>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- INTRO WELCOME PANEL (Navy with Career Illustration) -->
-        <section class="welcome-panel">
-            <div class="welcome-copy">
-                <span class="welcome-tag">YOUR NEXT CHAPTER STARTS HERE</span>
-                <h1>Make your next career move count.</h1>
-                <p>Discover opportunities, explore new technologies and connect with companies building the future.</p>
-            </div>
-            <div class="welcome-art">
-                <svg width="200" height="160" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="70" cy="40" r="18" fill="rgba(255,255,255,0.15)"/>
-                    <rect x="52" y="62" rx="12" width="36" height="45" fill="rgba(255,255,255,0.12)"/>
-                    <rect x="120" y="55" rx="6" width="50" height="40" fill="rgba(255,255,255,0.18)"/>
-                    <rect x="135" y="48" rx="3" width="20" height="10" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2.5"/>
-                    <line x1="120" y1="72" x2="170" y2="72" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
-                    <circle cx="30" cy="130" r="4" fill="rgba(255,255,255,0.08)"/>
-                    <circle cx="50" cy="140" r="6" fill="rgba(255,255,255,0.06)"/>
-                    <circle cx="160" cy="25" r="5" fill="rgba(255,255,255,0.1)"/>
-                    <circle cx="185" cy="40" r="3" fill="rgba(255,255,255,0.07)"/>
-                    <polyline points="20,120 60,105 100,90 140,60 180,35" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-        </section>
-
-        <!-- SEARCH SECTION -->
-        <section class="search-section">
-            <form action="/" method="GET" class="search-form">
-                <div class="search-field">
-                    <label>WHAT ARE YOU LOOKING FOR?</label>
-                    <input type="text" name="search" value="{{ search }}" placeholder="Job title, company or skill (e.g. Python, React)">
-                </div>
-
-                <div class="search-field">
-                    <label>LOCATION / CITY</label>
-                    <input type="text" name="location" value="{{ location }}" placeholder="City (e.g. Bangalore, Mumbai, Remote)">
-                </div>
-
-                <div class="search-field" style="max-width: 170px;">
-                    <label>EXPERIENCE</label>
-                    <select name="experience">
-                        <option value="">All Exp</option>
-                        <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>Experienced</option>
-                        <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>Fresher</option>
-                        <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>1-3 yrs</option>
-                        <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>3-5 yrs</option>
-                        <option value="5+ years" {% if experience == '5+ years' %}selected{% endif %}>5+ yrs</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="search-button">Search Jobs →</button>
-            </form>
-        </section>
-
-        <!-- CITY FILTER STRIP (In-page filter pills with live counts) -->
-        <div class="city-filter-container">
-            <div class="city-filter-label">
-                <i class="bi bi-geo-alt-fill text-primary"></i> Filter Cities:
-            </div>
-            <div class="city-pills-row">
-                <a href="/{% if search %}?search={{ search }}{% endif %}"
-                   class="city-pill {% if not location %}active{% endif %}">
-                   All Cities
-                </a>
-                {% for c in city_stats %}
-                <a href="/?location={{ c.name }}{% if search %}&search={{ search }}{% endif %}"
-                   class="city-pill {% if location and c.name.lower() in location.lower() %}active{% endif %}">
-                   {{ c.label }}
-                   <span class="pill-count">{{ c.count }}</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- QUICK STATS -->
-        <section class="stats-grid">
-            <div class="stat-card">
-                <span>Available opportunities</span>
-                <strong>{{ jobs|length }}</strong>
-                <small>Matching your search & filters</small>
-            </div>
-            <div class="stat-card">
-                <span>Technology fields</span>
-                <strong>08+</strong>
-                <small>Explore different career paths</small>
-            </div>
-            <div class="stat-card">
-                <span>Career possibilities</span>
-                <strong>∞</strong>
-                <small>Start with your skills</small>
-            </div>
-        </section>
-
-        <!-- JOB CONTENT HEADING -->
-        <div class="content-heading">
-            <div>
-                <span class="eyebrow">EXPLORE OPPORTUNITIES</span>
-                <h3>Jobs worth looking into</h3>
-                <p>Roles from different industries, teams and technology stacks.</p>
-            </div>
-            <span class="result-count">{{ jobs|length }} results found</span>
-        </div>
-
-        <!-- CRITERIA & TALENT ACTIONS BANNER (Clean, un-congested horizontal bar) -->
-        <div class="talent-action-banner">
-            <div class="talent-action-info">
-                <i class="bi bi-bell-fill talent-bell-icon"></i>
-                <div>
-                    <strong>Job Criteria & Talent Alerts</strong>
-                    <p>Receive immediate alerts when new jobs match your criteria, or connect with our recruiting network.</p>
-                </div>
-            </div>
-            <div class="talent-action-buttons">
-                <button type="button" class="btn-banner-alert" data-bs-toggle="modal" data-bs-target="#bbAlertModal">
-                    <i class="bi bi-bell me-1"></i> GET ALERT
-                </button>
-                <button type="button" class="btn-banner-connect" data-bs-toggle="modal" data-bs-target="#bbConnectModal">
-                    <i class="bi bi-people me-1"></i> CONNECT WITH US
-                </button>
-            </div>
-        </div>
-
-        <!-- ACTIVE CRITERIA STRIP (Shown when any filter is active) -->
-        {% if active_criteria %}
-        <div class="active-criteria-strip">
-            <span class="criteria-strip-label"><i class="bi bi-funnel-fill text-primary"></i> Active Criteria:</span>
-            <div class="criteria-chips-inline">
-                {% for c in active_criteria %}
-                <a href="{{ c.remove_url }}" class="criteria-chip-pill" title="Remove filter: {{ c.name }}">
-                    <span>{{ c.name }}</span>
-                    <span class="chip-remove-x">✕</span>
-                </a>
-                {% endfor %}
-                <a href="/" class="criteria-clear-link">
-                    <i class="bi bi-x-circle me-1"></i> Clear all
-                </a>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- HORIZONTAL FILTER BAR (Sleek, un-congested dropdowns) -->
-        <form action="/" method="GET" class="filter-bar">
-            {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
-            {% if location %}<input type="hidden" name="location" value="{{ location }}">{% endif %}
-
-            <!-- Experience Filter -->
-            <select name="experience" onchange="this.form.submit()">
-                <option value="">All Experience</option>
-                <option value="Experienced Hires" {% if experience == 'Experienced Hires' %}selected{% endif %}>
-                    Experienced Hires ({{ exp_counts.get("Experienced Hires", 0) }})
-                </option>
-                <option value="Fresher" {% if experience == 'Fresher' %}selected{% endif %}>
-                    Fresher / Entry ({{ exp_counts.get("Fresher", 0) }})
-                </option>
-                <option value="1-3 years" {% if experience == '1-3 years' %}selected{% endif %}>
-                    1-3 years ({{ exp_counts.get("1-3 years", 0) }})
-                </option>
-                <option value="3-5 years" {% if experience == '3-5 years' %}selected{% endif %}>
-                    3-5 years ({{ exp_counts.get("3-5 years", 0) }})
-                </option>
-                <option value="5+ years" {% if experience == '5+ years' %}selected{% endif %}>
-                    5+ years ({{ exp_counts.get("5+ years", 0) }})
-                </option>
-            </select>
-
-            <!-- Job Function Filter -->
-            <select name="function" onchange="this.form.submit()">
-                <option value="">All Job Functions</option>
-                {% for fn_name, fn_label in [
-                    ("Software Development/Engineering", "Software Dev / Eng"),
-                    ("Cloud & DevOps", "Cloud & DevOps"),
-                    ("Data & Machine Learning", "Data & AI / ML"),
-                    ("Security & Systems", "Security & Systems"),
-                    ("Product & Design", "Product & Design")
-                ] %}
-                <option value="{{ fn_name }}" {% if job_function == fn_name %}selected{% endif %}>
-                    {{ fn_label }} ({{ func_counts.get(fn_name, 0) }})
-                </option>
-                {% endfor %}
-            </select>
-
-            <!-- Job Type Filter -->
-            <select name="job_type" onchange="this.form.submit()">
-                <option value="">All Job Types</option>
-                {% for item in ["Full-time", "Part-time", "Internship", "Contract"] %}
-                <option value="{{ item }}" {% if job_type == item %}selected{% endif %}>
-                    {{ item }}
-                </option>
-                {% endfor %}
-            </select>
-
-            <!-- Work Mode Filter -->
-            <select name="work_mode" onchange="this.form.submit()">
-                <option value="">All Work Modes</option>
-                {% for item in ["Remote", "Hybrid", "On-site"] %}
-                <option value="{{ item }}" {% if work_mode == item %}selected{% endif %}>
-                    {{ item }} ({{ mode_counts.get(item, 0) }})
-                </option>
-                {% endfor %}
-            </select>
-
-            {% if search or location or experience or job_type or work_mode or job_function %}
-            <a href="/" class="clear-filter ms-2">
-                <i class="bi bi-x-circle me-1"></i> Clear filters
+        <!-- Quick Hub Cities Strip -->
+        <div class="filter-pills-row">
+            <span class="small fw-bold text-uppercase me-2" style="font-size: 11px; letter-spacing: 1px; color: var(--color-fog);">Hub Cities:</span>
+            <a href="/{% if search %}?search={{ search }}{% endif %}" class="filter-chip {% if not location %}active{% endif %}">
+                All Cities
             </a>
-            {% endif %}
-        </form>
+            {% for c in city_stats %}
+            <a href="/?location={{ c.name }}{% if search %}&search={{ search }}{% endif %}" class="filter-chip {% if location and c.name.lower() in location.lower() %}active{% endif %}">
+                {{ c.label }}
+                <span class="filter-chip-count">({{ c.count }})</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
 
-        <!-- FULL-WIDTH SPACIOUS JOBS GRID (Unconstrained 3-Column Layout) -->
-        <section class="jobs-grid">
-            {% for job in jobs %}
-            <article class="job-card {% if loop.index > 12 %}bb-job-hidden{% endif %}">
-                <!-- Building Photo in Background (Card Cover Banner) -->
-                <div class="job-card-banner">
-                    <img src="{{ job.building_img }}" alt="{{ job.company }} Office" class="building-banner-img" loading="lazy">
-                    <div class="banner-gradient-overlay"></div>
-                    <span class="banner-mode-badge">
-                        <i class="bi bi-laptop me-1"></i>{{ job.work_mode or "On-site" }}
-                    </span>
+    <!-- Active Filter Criteria Badges -->
+    {% if active_criteria %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 bg-white border border-2 border-dark rounded-3">
+        <span class="small fw-bold text-uppercase me-2" style="font-size: 11px; color: var(--color-fog);">Active Criteria:</span>
+        {% for c in active_criteria %}
+        <a href="{{ c.remove_url }}" class="badge-lavender text-decoration-none" title="Remove {{ c.name }}">
+            {{ c.name }} ✕
+        </a>
+        {% endfor %}
+        <a href="/" class="small text-muted ms-auto text-decoration-underline">Clear all</a>
+    </div>
+    {% endif %}
+
+    <!-- ============================================================
+         DARK VELVET CHAMBER: EDITORIAL PHILOSOPHY & METRICS
+         #1a1a1a fill, 64px radius, #ffffeb text
+         ============================================================ -->
+    <section class="dark-chamber" id="philosophy">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-7">
+                <span class="badge-forest mb-3">
+                    <i class="bi bi-shield-check me-1"></i> Institutional Standard
+                </span>
+                <h2 style="font-size: clamp(32px, 4vw, 56px); line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 20px;">
+                    Engineering careers built on <span class="shimmer-text-highlight">transparent intelligence</span>, not recruiter noise.
+                </h2>
+                <p style="font-size: 18px; line-height: 1.6; max-width: 580px; margin-bottom: 32px;">
+                    Every role on WorkLane is verified directly with engineering leadership. No stale listings, no ghosting, and transparent compatibility scoring before you even apply.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <button type="button" class="btn-primary-cta" data-bs-toggle="modal" data-bs-target="#bbAlertModal">
+                        <i class="bi bi-bell me-1"></i> Configure Job Alerts
+                    </button>
+                    <a href="/register" class="btn-secondary-outline">
+                        Post an Engineering Role →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Comparison Metric Cards inside Velvet Chamber -->
+            <div class="col-lg-5">
+                <div class="d-flex flex-column gap-3">
+                    <div style="background: #252525; border: 2px solid #383838; border-radius: 28px; padding: 26px;">
+                        <span class="small fw-bold text-uppercase tracking-wider" style="color: var(--color-fog); font-size: 11px;">Active Discovery</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 44px; color: var(--color-lumen-cream); margin: 6px 0;">
+                            {{ total_jobs_count }} Roles
+                        </div>
+                        <p class="small mb-0" style="color: #a0a096;">Curated across high-performance distributed systems, AI, and cloud.</p>
+                    </div>
+
+                    <div style="background: #252525; border: 2px solid #383838; border-radius: 28px; padding: 26px;">
+                        <span class="small fw-bold text-uppercase tracking-wider" style="color: var(--color-fog); font-size: 11px;">Verified Employers</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 44px; color: var(--color-lavender-whisper); margin: 6px 0;">
+                            {{ total_companies_count }}+ Teams
+                        </div>
+                        <p class="small mb-0" style="color: #a0a096;">Direct engineering managers with authentic interview timelines.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         JOB DISCOVERY SECTION — EDITORIAL BROADSHEET DISCOVERY
+         Top Job Alert & Criteria Bar, On-Demand Filters, Concise Stream
+         ============================================================ -->
+    <section id="opportunities" class="my-5">
+
+        <!-- ========================================================
+             1. TOP JOB ALERT & CRITERIA BAR (Joe Ballard / Job Alert on top)
+             ======================================================== -->
+        <div class="job-alert-banner mb-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-7">
+                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                        <span class="badge-lavender">
+                            <i class="bi bi-bell-fill me-1"></i> Criteria & Job Alerts
+                        </span>
+                        {% if active_criteria %}
+                            <span class="small fw-bold text-uppercase" style="font-size: 11px; color: var(--color-fog);">Active:</span>
+                            {% for c in active_criteria %}
+                            <span class="criteria-item-pill">
+                                • {{ c.name }} <a href="{{ c.remove_url }}" class="criteria-remove-link" title="Remove {{ c.name }}">✕</a>
+                            </span>
+                            {% endfor %}
+                            <a href="/" class="small text-muted text-decoration-underline ms-2">Clear</a>
+                        {% else %}
+                            <span class="small text-muted">Showing all active engineering, technical and leadership roles across verified employers.</span>
+                        {% endif %}
+                    </div>
+                    <p class="small text-muted mb-0" style="font-size: 13px; line-height: 1.4;">
+                        Receive instant email dispatches when high-priority roles matching your technical criteria are published.
+                    </p>
                 </div>
 
-                <div class="job-card-body">
-                    <!-- Overlapping Recruiter / Company PFP -->
-                    <div class="job-card-pfp-row">
-                        <div class="pfp-container">
-                            <img src="{{ job.pfp_img }}" alt="{{ job.company }}" class="company-pfp" loading="lazy">
-                            <span class="pfp-verified-badge" title="Verified Recruiter">
-                                <i class="bi bi-check-lg"></i>
+                <div class="col-lg-5 text-lg-end">
+                    <div class="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
+                        <button type="button" class="btn-primary-cta py-2 px-3 small" data-bs-toggle="modal" data-bs-target="#bbAlertModal">
+                            <i class="bi bi-bell me-1"></i> GET ALERT
+                        </button>
+                        <button type="button" class="btn-secondary-outline py-2 px-3 small" data-bs-toggle="modal" data-bs-target="#bbConnectModal">
+                            <i class="bi bi-people me-1"></i> CONNECT WITH US
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             2. RESULTS HEADER & "VIEW FILTERS" TOGGLE
+             ======================================================== -->
+        <div class="results-header-bar d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="results-title">Results ({{ jobs|length }})</h2>
+                <span class="small text-muted">Showing verified engineering & technical positions</span>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn-secondary-outline py-2 px-3 small d-inline-flex align-items-center gap-2 {% if active_criteria %}active{% endif %}" id="toggleFiltersBtn" onclick="toggleFiltersPanel()">
+                    <i class="bi bi-sliders"></i>
+                    <span id="filtersBtnText">{% if active_criteria %}Hide Filters{% else %}View Filters{% endif %}</span>
+                    {% if active_criteria %}
+                    <span class="badge bg-dark text-white rounded-pill ms-1" style="font-size: 11px;">{{ active_criteria|length }}</span>
+                    {% endif %}
+                </button>
+                <span class="badge-forest d-none d-sm-inline-flex" style="font-size: 11px;">
+                    <span class="ember-dot me-1"></span> Live Feed
+                </span>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             3. ON-DEMAND COLLAPSIBLE FILTERS PANEL (Takes zero horizontal space when closed)
+             ======================================================== -->
+        <div id="collapsibleFiltersPanel" class="collapsible-filters-drawer mb-4 {% if not active_criteria %}d-none{% endif %}" {% if not active_criteria %}style="display: none;"{% endif %}>
+            <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-2 border-dark">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-funnel-fill fs-5"></i>
+                    <h3 style="font-family: var(--font-eb-garamond); font-size: 26px; margin: 0;">Filters</h3>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    {% if search or location or experience or job_type or work_mode or job_function %}
+                    <a href="/" class="small text-muted text-decoration-underline" style="font-size: 12px;">Clear all filters</a>
+                    {% endif %}
+                    <button type="button" class="btn-close" onclick="toggleFiltersPanel()" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Group 1: Experience Level -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="filter-group-header">Experience level</div>
+                    <div class="filter-group-list">
+                        {% for exp_key, exp_label in [
+                            ("Experienced Hires", "Experienced Hires"),
+                            ("Fresher", "Fresher / Entry"),
+                            ("1-3 years", "1-3 years"),
+                            ("3-5 years", "3-5 years"),
+                            ("5+ years", "5+ years")
+                        ] %}
+                        <a href="{% if experience == exp_key %}/?{% if search %}search={{ search }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if job_function %}function={{ job_function }}&{% endif %}{% if work_mode %}work_mode={{ work_mode }}{% endif %}{% else %}/?experience={{ exp_key }}{% if search %}&search={{ search }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if job_function %}&function={{ job_function }}{% endif %}{% if work_mode %}&work_mode={{ work_mode }}{% endif %}{% endif %}"
+                           class="filter-link-item {% if experience == exp_key %}active{% endif %}">
+                            <span>
+                                <i class="bi {% if experience == exp_key %}bi-check-square-fill text-dark{% else %}bi-square text-muted{% endif %} me-2"></i>
+                                {{ exp_label }}
                             </span>
-                        </div>
-                        <div class="card-badges-group">
-                            <span class="job-type-pill">{{ job.job_type or "Full-time" }}</span>
-                            <span class="job-rating-pill">
-                                <i class="bi bi-star-fill text-warning"></i> {{ job.rating or "4.3" }}
+                            <span class="filter-count-badge">({{ exp_counts.get(exp_key, 0) }})</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Group 2: Location -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="filter-group-header">Location</div>
+                    <div class="filter-group-list">
+                        {% for loc_name in ["Bangalore", "Mumbai", "Gurgaon", "Delhi", "Hyderabad", "Pune", "Remote"] %}
+                        <a href="{% if location and loc_name.lower() in location.lower() %}/?{% if search %}search={{ search }}&{% endif %}{% if experience %}experience={{ experience }}&{% endif %}{% if job_function %}function={{ job_function }}&{% endif %}{% if work_mode %}work_mode={{ work_mode }}{% endif %}{% else %}/?location={{ loc_name }}{% if search %}&search={{ search }}{% endif %}{% if experience %}&experience={{ experience }}{% endif %}{% if job_function %}&function={{ job_function }}{% endif %}{% if work_mode %}&work_mode={{ work_mode }}{% endif %}{% endif %}"
+                           class="filter-link-item {% if location and loc_name.lower() in location.lower() %}active{% endif %}">
+                            <span>
+                                <i class="bi {% if location and loc_name.lower() in location.lower() %}bi-check-square-fill text-dark{% else %}bi-square text-muted{% endif %} me-2"></i>
+                                {{ loc_name }}
                             </span>
-                        </div>
+                            <span class="filter-count-badge">({{ loc_counts.get(loc_name, 0) }})</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Group 3: Job Function -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="filter-group-header">Job function</div>
+                    <div class="filter-group-list">
+                        {% for fn_name, fn_label in [
+                            ("Software Development/Engineering", "Software Dev / Eng"),
+                            ("Cloud & DevOps", "Cloud & DevOps"),
+                            ("Data & Machine Learning", "Data & AI / ML"),
+                            ("Security & Systems", "Security & Systems"),
+                            ("Product & Design", "Product & Design")
+                        ] %}
+                        <a href="{% if job_function == fn_name %}/?{% if search %}search={{ search }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if experience %}experience={{ experience }}&{% endif %}{% if work_mode %}work_mode={{ work_mode }}{% endif %}{% else %}/?function={{ fn_name }}{% if search %}&search={{ search }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if experience %}&experience={{ experience }}{% endif %}{% if work_mode %}&work_mode={{ work_mode }}{% endif %}{% endif %}"
+                           class="filter-link-item {% if job_function == fn_name %}active{% endif %}">
+                            <span>
+                                <i class="bi {% if job_function == fn_name %}bi-check-square-fill text-dark{% else %}bi-square text-muted{% endif %} me-2"></i>
+                                {{ fn_label }}
+                            </span>
+                            <span class="filter-count-badge">({{ func_counts.get(fn_name, 0) }})</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Group 4: Work Mode -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="filter-group-header">Work mode</div>
+                    <div class="filter-group-list">
+                        {% for wm in ["Remote", "Hybrid", "On-site"] %}
+                        <a href="{% if work_mode == wm %}/?{% if search %}search={{ search }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if experience %}experience={{ experience }}&{% endif %}{% if job_function %}function={{ job_function }}{% endif %}{% else %}/?work_mode={{ wm }}{% if search %}&search={{ search }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if experience %}&experience={{ experience }}{% endif %}{% if job_function %}&function={{ job_function }}{% endif %}{% endif %}"
+                           class="filter-link-item {% if work_mode == wm %}active{% endif %}">
+                            <span>
+                                <i class="bi {% if work_mode == wm %}bi-check-square-fill text-dark{% else %}bi-square text-muted{% endif %} me-2"></i>
+                                {{ wm }}
+                            </span>
+                            <span class="filter-count-badge">({{ mode_counts.get(wm, 0) }})</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             4. SPACIOUS RESULTS STREAM (Concise 6 initial, load more for rest)
+             ======================================================== -->
+        <div class="results-jobs-list">
+            {% for job in jobs %}
+            <article class="job-broadsheet-card {% if loop.index > 6 %}bb-job-hidden{% endif %}" {% if loop.index > 6 %}style="display: none;"{% endif %}>
+                <!-- Top line: Date, Location, Work Mode, Bookmark -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="small" style="color: var(--color-fog); font-weight: 500;">
+                            <i class="bi bi-calendar3 me-1"></i> {{ job.formatted_date or job.posted_time }}
+                        </span>
+                        <span style="color: var(--color-lumen-stone);">•</span>
+                        <span class="small" style="color: var(--color-fog); font-weight: 500;">
+                            <i class="bi bi-geo-alt me-1"></i> {{ job.location }}
+                        </span>
+                        <span class="badge-forest" style="padding: 2px 8px; font-size: 11px;">
+                            {{ job.work_mode or "On-site" }}
+                        </span>
                     </div>
 
-                    <!-- Company Name & Verified Tag -->
-                    <div class="company-info-row">
-                        <span class="company-title">{{ job.company }}</span>
-                        <span class="reviews-count">({{ job.reviews or "1.2k" }} reviews)</span>
-                    </div>
+                    {% if session.get('role') == 'job_seeker' %}
+                    <button type="button" class="bookmark-toggle-btn {% if job.id in saved_job_ids %}active{% endif %}" onclick="toggleBookmark({{ job.id }}, this)" title="Save to bookmarks">
+                        <i class="bi {% if job.id in saved_job_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                    </button>
+                    {% endif %}
+                </div>
 
-                    <!-- Job Title -->
-                    <h4 class="job-title-text">
+                <!-- Job Title & Company -->
+                <div>
+                    <h3 style="font-family: var(--font-eb-garamond); font-weight: 400; font-size: clamp(24px, 2.5vw, 30px); line-height: 1.15; margin: 4px 0 6px;">
                         <a href="javascript:void(0)" onclick="openJobDetail({{ job.id }})" style="color: inherit; text-decoration: none;">
                             {{ job.title }}
                         </a>
-                    </h4>
-
-                    <!-- Salary Highlight -->
-                    <div class="salary-highlight-box">
-                        <strong class="salary-amount">{{ job.salary }}</strong>
-                        <span class="salary-label">• Est. CTC / Stipend</span>
+                    </h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-semibold text-dark">{{ job.company }}</span>
+                        <span class="badge-forest" style="padding: 2px 6px; font-size: 10px;">
+                            <i class="bi bi-patch-check-fill me-1"></i> Verified
+                        </span>
                     </div>
+                </div>
 
-                    <!-- Job Description Preview -->
-                    <p class="job-description">{{ job.description }}</p>
-
-                    <!-- Meta details: City, Experience, Time -->
-                    <div class="job-meta-details">
-                        <span><i class="bi bi-geo-alt-fill text-primary"></i> {{ job.location }}</span>
-                        <span><i class="bi bi-briefcase-fill text-secondary"></i> {{ job.experience or "Fresher" }}</span>
-                        <span><i class="bi bi-calendar3 text-muted"></i> {{ job.formatted_date or job.posted_time }}</span>
+                <!-- Compensation & Skill Match -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="job-compensation-tag">
+                        {{ job.salary }}
                     </div>
+                    {% if job.match_score and job.match_score.match_pct > 0 %}
+                    <span class="badge-lavender">
+                        <i class="bi bi-stars"></i> {{ job.match_score.match_pct }}% Match
+                    </span>
+                    {% endif %}
+                </div>
 
-                    <!-- Key Skills Tags -->
-                    <div class="skill-tags">
-                        {% for skill in (job.skills or "").split(",")[:4] %}
+                <!-- Snippet -->
+                <p class="job-brief-desc mb-1" style="font-size: 14.5px; line-height: 1.5; color: #444444;">
+                    {{ job.description }}
+                </p>
+
+                <!-- Bottom Bar: Skills, Experience, CTAs -->
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-1 border-secondary border-opacity-25 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="badge-dark-square me-1" style="padding: 2px 8px; font-size: 11px;">
+                            {{ job.experience or "Fresher" }}
+                        </span>
+                        {% for skill in (job.skills or "").split(",")[:3] %}
                             {% if skill.strip() %}
-                            <a href="/?search={{ skill.strip() }}">{{ skill.strip() }}</a>
+                            <a href="/?search={{ skill.strip() }}" class="card-tag-item" style="font-size: 11.5px;">{{ skill.strip() }}</a>
                             {% endif %}
                         {% endfor %}
                     </div>
 
-                    <!-- Card Footer Actions -->
-                    <div class="job-card-footer">
-                        <div class="hiring-status">
-                            <i class="bi bi-patch-check-fill text-primary"></i>
-                            <span>Actively Hiring</span>
-                        </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn-ghost small px-2" onclick="openJobDetail({{ job.id }})">
+                            Details
+                        </button>
 
                         {% if job.id in applied_job_ids %}
-                            <span class="badge bg-success-subtle text-success py-2 px-3 fw-semibold">
-                                <i class="bi bi-check-circle-fill me-1"></i> Applied
-                            </span>
+                            <span class="badge-forest">Applied</span>
                         {% elif session.get('role') == 'job_seeker' %}
-                            <form method="POST" action="/apply/{{ job.id }}">
-                                <button type="submit" class="apply-button">Apply Now →</button>
-                            </form>
+                        <button type="button" class="btn-primary-cta py-1 px-3 small" onclick="openApplyModal({{ job.id }}, '{{ job.title|replace('\'', '\\\'') }}', '{{ job.company|replace('\'', '\\\'') }}')">
+                            Quick Apply →
+                        </button>
                         {% elif not session.get('user_id') %}
-                            <a href="/login" class="apply-button">Login to Apply →</a>
-                        {% else %}
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openJobDetail({{ job.id }})">Details</button>
+                            <a href="/login" class="btn-primary-cta py-1 px-3 small">Sign In</a>
                         {% endif %}
                     </div>
                 </div>
             </article>
             {% else %}
-            <div class="empty-state">
-                <i class="bi bi-search display-5 text-muted mb-3 d-block"></i>
-                <h3>No matching jobs found</h3>
-                <p class="text-muted mb-4">Try changing your search keywords or resetting your filter criteria.</p>
-                <a href="/" class="search-button">View all jobs</a>
+            <div class="cream-card text-center py-5">
+                <i class="bi bi-search display-5 mb-3 d-block"></i>
+                <h3 style="font-size: 32px;">No matching positions found</h3>
+                <p class="text-muted mb-4">Try clearing your filters or searching for alternative technical terms.</p>
+                <a href="/" class="btn-primary-cta">View All Positions</a>
             </div>
             {% endfor %}
-        </section>
+        </div>
 
-        <!-- LOAD MORE OPTION -->
-        {% if jobs|length > 12 %}
-        <div class="bb-load-more-wrapper" id="bbLoadMoreWrapper">
-            <button type="button" class="bb-btn-load-more" id="bbLoadMoreBtn" onclick="loadMoreJobs()">
-                LOAD MORE
+        <!-- LOAD MORE BUTTON -->
+        {% if jobs|length > 6 %}
+        <div class="text-center my-4" id="bbLoadMoreWrapper">
+            <button type="button" class="btn-secondary-outline px-5 py-3" id="bbLoadMoreBtn" onclick="loadMoreJobs()">
+                LOAD MORE POSITIONS ({{ jobs|length - 6 }} REMAINING)
             </button>
         </div>
         {% endif %}
+    </section>
 
-        <!-- TECHNOLOGY SECTION -->
-        <section class="technology-section">
-            <div>
-                <span class="eyebrow">EXPLORE YOUR SKILLS</span>
-                <h3>Opportunities across technologies</h3>
-                <p>Discover roles across popular programming languages, frameworks and tools.</p>
+    <!-- ============================================================
+         DARK VELVET CHAMBER: TALENT NETWORK & ALERTS
+         #1a1a1a fill, 64px radius, #ffffeb text
+         ============================================================ -->
+    <section class="dark-chamber" id="network">
+        <div class="row g-5">
+            <div class="col-lg-6 border-end-lg border-secondary">
+                <span class="badge-lavender mb-3">Never Miss an Opportunity</span>
+                <h3 style="font-size: 40px; color: var(--color-lumen-cream); margin-bottom: 14px;">
+                    Receive Career Alerts
+                </h3>
+                <p style="color: #c0c0b4; margin-bottom: 24px;">
+                    Subscribe to receive immediate email dispatches when high-priority roles matching your criteria open.
+                </p>
+                <form action="/get-alert" method="POST" class="d-flex flex-column gap-3">
+                    <input type="text" name="criteria" value="{% if active_criteria %}{% for c in active_criteria %}{{ c.name }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}All Engineering Positions{% endif %}" class="wispr-input bg-dark text-white border-secondary" readonly>
+                    <div class="d-flex gap-2">
+                        <input type="email" name="email" placeholder="Your work or personal email" class="wispr-input" required>
+                        <button type="submit" class="btn-primary-cta">
+                            GET ALERT
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div class="technology-tags">
-                {% for skill in [
-                    "Python", "Java", "C++", "JavaScript", "TypeScript",
-                    "React", "Angular", "Vue.js", "Flask", "Django",
-                    "FastAPI", "Node.js", "Spring Boot", "PHP",
-                    "Go", "Rust", "SQL", "PostgreSQL", "MongoDB",
-                    "AWS", "Docker", "Kubernetes", "TensorFlow",
-                    "PyTorch", "Flutter", "Git"
-                ] %}
-                <a href="/?search={{ skill }}">{{ skill }}</a>
-                {% endfor %}
+            <div class="col-lg-6">
+                <span class="badge-forest mb-3">Curated Representation</span>
+                <h3 style="font-size: 40px; color: var(--color-lumen-cream); margin-bottom: 14px;">
+                    WorkLane Talent Network
+                </h3>
+                <p style="color: #c0c0b4; margin-bottom: 24px;">
+                    Join our private candidate registry. Verified tech companies query our network for unadvertised roles.
+                </p>
+                <form action="/connect" method="POST" class="d-flex flex-column gap-2">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" name="name" placeholder="Full Name" class="wispr-input" required>
+                        </div>
+                        <div class="col-6">
+                            <input type="email" name="email" placeholder="Email Address" class="wispr-input" required>
+                        </div>
+                    </div>
+                    <input type="text" name="skills" placeholder="Core Technical Stack (e.g. Python, Docker, Go)" class="wispr-input">
+                    <button type="submit" class="btn-primary-cta mt-2">
+                        CONNECT WITH US →
+                    </button>
+                </form>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- ============================================================
-             CORPORATE EDITORIAL FOOTER (Requested by User)
-             ============================================================ -->
-        <footer class="bb-corporate-footer">
-            <div class="bb-footer-top">
-                <div class="bb-footer-container">
-                    <!-- Left Brand Overview Blurb -->
-                    <div class="bb-footer-brand-col">
-                        <p class="bb-footer-blurb">
-                            HirePulse, the global business and technology information and career network, gives influential talent and industry leaders a critical edge by connecting them to high-impact engineering, infrastructure, and leadership opportunities. The company’s core strength — delivering transparent intelligence and reliable discovery — drives everything we build.
-                        </p>
-                    </div>
-
-                    <!-- Directory Columns: VALUES, CAREERS, PRESS, REGIONS -->
-                    <div class="bb-footer-nav-col">
-                        <h4 class="bb-footer-title">VALUES</h4>
-                        <ul class="bb-footer-links">
-                            <li><a href="javascript:void(0)">Diversity and Inclusion</a></li>
-                            <li><a href="javascript:void(0)">Tech at HirePulse</a></li>
-                            <li><a href="javascript:void(0)">Philanthropy</a></li>
-                            <li><a href="javascript:void(0)">Sustainability</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="bb-footer-nav-col">
-                        <h4 class="bb-footer-title">CAREERS</h4>
-                        <ul class="bb-footer-links">
-                            <li><a href="javascript:void(0)">What we do</a></li>
-                            <li><a href="javascript:void(0)">Working here</a></li>
-                            <li><a href="javascript:void(0)">Early career</a></li>
-                            <li><a href="javascript:void(0)">Experienced Hires</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="bb-footer-nav-col">
-                        <h4 class="bb-footer-title">PRESS</h4>
-                        <ul class="bb-footer-links">
-                            <li><a href="javascript:void(0)">Press contacts</a></li>
-                            <li><a href="javascript:void(0)">Announcements</a></li>
-                            <li><a href="javascript:void(0)">Research reports</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="bb-footer-nav-col">
-                        <h4 class="bb-footer-title">REGIONS</h4>
-                        <ul class="bb-footer-links">
-                            <li><a href="javascript:void(0)">India</a></li>
-                            <li><a href="javascript:void(0)">Americas</a></li>
-                            <li><a href="javascript:void(0)">EMEA</a></li>
-                            <li><a href="javascript:void(0)">Asia Pacific</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Social Links Row -->
-            <div class="bb-footer-social">
-                <div class="bb-footer-container bb-social-flex">
-                    <a href="https://linkedin.com/" target="_blank" rel="noopener" class="bb-social-link">
-                        <i class="bi bi-linkedin"></i> LinkedIn
-                    </a>
-                    <a href="https://twitter.com/" target="_blank" rel="noopener" class="bb-social-link">
-                        <i class="bi bi-twitter-x"></i> Twitter
-                    </a>
-                    <a href="https://facebook.com/" target="_blank" rel="noopener" class="bb-social-link">
-                        <i class="bi bi-facebook"></i> Facebook
-                    </a>
-                    <a href="https://instagram.com/" target="_blank" rel="noopener" class="bb-social-link">
-                        <i class="bi bi-instagram"></i> Instagram
-                    </a>
-                    <a href="javascript:void(0)" class="bb-social-link">
-                        <i class="bi bi-rss-fill"></i> RSS
-                    </a>
-                </div>
-            </div>
-
-            <!-- Legal Copyright Row -->
-            <div class="bb-footer-bottom">
-                <div class="bb-footer-container bb-legal-flex">
-                    <div class="bb-legal-text">
-                        © 2026 HirePulse Finance & Technology LP. All rights reserved. 
-                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Privacy</a>
-                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Additional Policies</a>
-                        <span class="bb-legal-sep">|</span> <a href="javascript:void(0)">Accommodation & EEO Policy</a>
-                    </div>
-                    <div class="bb-footer-brand-mark">
-                        HirePulse
-                    </div>
-                </div>
-            </div>
-        </footer>
-
-    </main>
-</div>
+</div><!-- /page-container -->
 
 <!-- ============================================================
-     MODALS (Job Details, Get Alert, Connect With Us)
+     EDITORIAL FOOTER CHAMBER (Wispr Flow broadsheet footer)
+     ============================================================ -->
+<footer class="editorial-footer-chamber">
+    <div class="page-container">
+        <div class="footer-top-grid">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="nav-brand-mark" style="background:#ffffeb; color:#1a1a1a;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6h16M4 12h10M4 18h16" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span style="font-family: var(--font-eb-garamond); font-size: 26px; color: var(--color-lumen-cream);">WorkLane</span>
+                </div>
+                <p class="footer-blurb-text">
+                    WorkLane, the global business and technology information and career network, gives influential talent and industry leaders a critical edge by connecting them to high-impact engineering, infrastructure, and leadership opportunities. The company’s core strength — delivering transparent intelligence and reliable discovery — drives everything we build.
+                </p>
+            </div>
+
+            <div>
+                <h4 class="footer-col-title">VALUES</h4>
+                <ul class="footer-link-list">
+                    <li><a href="javascript:void(0)">Diversity and Inclusion</a></li>
+                    <li><a href="javascript:void(0)">Tech at WorkLane</a></li>
+                    <li><a href="javascript:void(0)">Philanthropy</a></li>
+                    <li><a href="javascript:void(0)">Sustainability</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="footer-col-title">CAREERS</h4>
+                <ul class="footer-link-list">
+                    <li><a href="javascript:void(0)">What we do</a></li>
+                    <li><a href="javascript:void(0)">Working here</a></li>
+                    <li><a href="javascript:void(0)">Early career</a></li>
+                    <li><a href="javascript:void(0)">Experienced Hires</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="footer-col-title">PRESS</h4>
+                <ul class="footer-link-list">
+                    <li><a href="javascript:void(0)">Press contacts</a></li>
+                    <li><a href="javascript:void(0)">Announcements</a></li>
+                    <li><a href="javascript:void(0)">Research reports</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="footer-col-title">REGIONS</h4>
+                <ul class="footer-link-list">
+                    <li><a href="javascript:void(0)">India</a></li>
+                    <li><a href="javascript:void(0)">Americas</a></li>
+                    <li><a href="javascript:void(0)">EMEA</a></li>
+                    <li><a href="javascript:void(0)">Asia Pacific</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Social Bar -->
+        <div class="d-flex flex-wrap gap-4 py-3 border-top border-bottom border-secondary mb-4">
+            <a href="https://linkedin.com/" target="_blank" rel="noopener" class="text-white text-decoration-none small">
+                <i class="bi bi-linkedin me-1"></i> LinkedIn
+            </a>
+            <a href="https://twitter.com/" target="_blank" rel="noopener" class="text-white text-decoration-none small">
+                <i class="bi bi-twitter-x me-1"></i> Twitter
+            </a>
+            <a href="https://facebook.com/" target="_blank" rel="noopener" class="text-white text-decoration-none small">
+                <i class="bi bi-facebook me-1"></i> Facebook
+            </a>
+            <a href="https://instagram.com/" target="_blank" rel="noopener" class="text-white text-decoration-none small">
+                <i class="bi bi-instagram me-1"></i> Instagram
+            </a>
+            <a href="javascript:void(0)" class="text-white text-decoration-none small">
+                <i class="bi bi-rss-fill me-1"></i> RSS
+            </a>
+        </div>
+
+        <div class="footer-bottom-bar">
+            <div>
+                © 2026 WorkLane Finance & Technology LP. All rights reserved. | <a href="javascript:void(0)" class="text-secondary">Privacy</a> | <a href="javascript:void(0)" class="text-secondary">Additional Policies</a> | <a href="javascript:void(0)" class="text-secondary">Accommodation & EEO Policy</a>
+            </div>
+            <div style="font-family: var(--font-eb-garamond); font-size: 20px; color: var(--color-lumen-cream);">
+                WorkLane
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- ============================================================
+     MODALS: JOB DETAILS, QUICK APPLY, REPORT
      ============================================================ -->
 
-<!-- Job Detail Modal -->
-<div class="modal fade" id="bbJobModal" tabindex="-1" aria-labelledby="bbJobModalLabel" aria-hidden="true">
+<!-- Job Details Modal -->
+<div class="modal fade" id="bbJobModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-bottom px-4 py-3 bg-light">
+        <div class="modal-content" style="background: var(--color-lumen-cream); border: 2px solid var(--color-vast-ink); border-radius: var(--radius-cards);">
+            <div class="modal-header border-bottom border-2 border-dark px-4 py-3">
                 <div>
-                    <span class="badge bg-primary text-white text-uppercase tracking-wider px-2 py-1 mb-1" id="modalJobFunction" style="font-size: 11px;">Engineering</span>
-                    <h4 class="modal-title fw-bold text-dark mb-0" id="modalJobTitle">Job Title</h4>
+                    <span class="badge-forest mb-1" id="modalJobFunction">Engineering</span>
+                    <h3 class="modal-title" id="modalJobTitle" style="font-size: 32px; letter-spacing: -0.5px;">Job Title</h3>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body px-4 py-4">
-                <div class="d-flex flex-wrap gap-3 text-muted small mb-3 pb-3 border-bottom">
-                    <div><i class="bi bi-building me-1"></i> <span id="modalJobCompany">Company</span></div>
+                <div class="d-flex flex-wrap gap-3 small mb-3 pb-3 border-bottom border-secondary text-muted">
+                    <div><i class="bi bi-building me-1"></i> <strong class="text-dark" id="modalJobCompany">Company</strong></div>
                     <div><i class="bi bi-geo-alt me-1"></i> <span id="modalJobLocation">Location</span></div>
                     <div><i class="bi bi-briefcase me-1"></i> <span id="modalJobType">Full-time</span> (<span id="modalJobMode">Hybrid</span>)</div>
                     <div><i class="bi bi-cash-stack me-1"></i> <strong class="text-dark" id="modalJobSalary">Salary</strong></div>
                     <div><i class="bi bi-calendar3 me-1"></i> <span id="modalJobDate">Date</span></div>
                 </div>
 
-                <div class="mb-4">
-                    <h6 class="fw-bold text-dark text-uppercase small tracking-wide">Role Overview & Description</h6>
-                    <p class="text-secondary mb-0" id="modalJobDesc" style="line-height: 1.7; font-size: 14.5px;"></p>
+                <div id="modalMatchContainer" class="mb-3 d-none">
+                    <div class="p-3 border border-2 border-dark rounded-3 d-flex align-items-center justify-content-between" style="background: #ffffff;">
+                        <div>
+                            <span class="small fw-bold text-dark d-block">Candidate Compatibility</span>
+                            <span class="small text-muted" id="modalMatchSummary">Skill analysis</span>
+                        </div>
+                        <span class="badge-lavender fs-6" id="modalMatchPct">0% Match</span>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <h6 class="fw-bold text-dark text-uppercase small tracking-wide">Required Skills & Technologies</h6>
+                <div class="mb-4">
+                    <h6 class="fw-bold text-uppercase small" style="letter-spacing: 1px; color: var(--color-fog);">Role Description</h6>
+                    <p class="mb-0" id="modalJobDesc" style="line-height: 1.7; font-size: 15px;"></p>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-uppercase small" style="letter-spacing: 1px; color: var(--color-fog);">Required Technologies</h6>
                     <div id="modalJobSkills" class="d-flex flex-wrap gap-2 pt-1"></div>
                 </div>
+
+                <div id="modalSimilarJobsContainer" class="mb-3 d-none border-top pt-3">
+                    <h6 class="fw-bold text-uppercase small mb-2" style="letter-spacing: 1px; color: var(--color-fog);">Similar Open Positions</h6>
+                    <div id="modalSimilarJobsList" class="d-flex flex-column gap-2"></div>
+                </div>
             </div>
-            <div class="modal-footer border-top px-4 py-3 bg-light d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
-                <div id="modalActionContainer"></div>
+            <div class="modal-footer border-top border-2 border-dark px-4 py-3 d-flex justify-content-between">
+                <div>
+                    {% if session.get('user_id') %}
+                    <button type="button" class="btn-ghost small text-danger p-0" onclick="openReportModal()">
+                        <i class="bi bi-flag me-1"></i> Report this listing
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn-secondary-outline py-1 px-3 small" data-bs-dismiss="modal">Close</button>
+                    <div id="modalActionContainer"></div>
+                </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--color-lumen-cream); border: 2px solid var(--color-vast-ink); border-radius: var(--radius-cards);">
+            <div class="modal-header border-bottom border-2 border-dark px-4 py-3">
+                <h4 class="modal-title" style="font-size: 26px;">Submit Application</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="applyForm" method="POST" action="">
+                <div class="modal-body px-4 py-4">
+                    <p class="small text-muted mb-3">
+                        Applying for <strong id="applyJobTitle" class="text-dark">Position</strong> at <span id="applyCompany">Company</span>.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase" style="letter-spacing: 0.8px; font-size: 11px;">Intro / Cover Note</label>
+                        <textarea class="wispr-input" name="cover_note" rows="3" placeholder="Briefly highlight relevant achievements or architecture projects..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase" style="letter-spacing: 0.8px; font-size: 11px;">Resume / GitHub Link</label>
+                        <input type="url" class="wispr-input" name="resume_link" placeholder="https://github.com/username or LinkedIn URL">
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-2 border-dark px-4 py-3">
+                    <button type="button" class="btn-secondary-outline py-2 px-3 small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-cta py-2 px-4 small">Submit Application →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal fade" id="bbConnectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--color-lumen-cream); border: 2px solid var(--color-vast-ink); border-radius: var(--radius-cards);">
+            <div class="modal-header border-bottom border-2 border-dark px-4 py-3">
+                <h4 class="modal-title" style="font-size: 26px;">Join WorkLane Talent Network</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/connect" method="POST">
+                <div class="modal-body px-4 py-4">
+                    <p class="small text-muted mb-3">
+                        Connect with our talent partners for confidential engineering and leadership opportunities.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Full Name</label>
+                        <input type="text" name="name" class="wispr-input" placeholder="e.g. Darshil Gehlot" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Email Address</label>
+                        <input type="email" name="email" class="wispr-input" placeholder="e.g. darshil@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Primary Stack</label>
+                        <input type="text" name="skills" class="wispr-input" placeholder="e.g. Python, Docker, Distributed Systems">
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-2 border-dark px-4 py-3">
+                    <button type="button" class="btn-secondary-outline py-2 px-3 small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-cta py-2 px-4 small">Join Network</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -618,67 +794,99 @@
 <!-- Get Alert Modal -->
 <div class="modal fade" id="bbAlertModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-bottom px-4 py-3" style="background: #14243c; color: white;">
-                <h5 class="modal-title fw-bold">Receive Career Alerts</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="background: var(--color-lumen-cream); border: 2px solid var(--color-vast-ink); border-radius: var(--radius-cards);">
+            <div class="modal-header border-bottom border-2 border-dark px-4 py-3">
+                <h4 class="modal-title" style="font-size: 26px;">Configure Career Alerts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="/get-alert" method="POST">
                 <div class="modal-body px-4 py-4">
-                    <p class="text-muted small mb-3">
-                        Subscribe to get immediate email alerts whenever new opportunities matching your active criteria are published.
-                    </p>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Active Criteria</label>
-                        <input type="text" class="form-control form-control-sm bg-light" name="criteria"
-                               value="{% if active_criteria %}{% for c in active_criteria %}{{ c.name }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}All Engineering Positions{% endif %}" readonly>
+                        <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Active Criteria</label>
+                        <input type="text" name="criteria" class="wispr-input bg-light" value="{% if active_criteria %}{% for c in active_criteria %}{{ c.name }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}All Engineering Positions{% endif %}" readonly>
                     </div>
                     <div class="mb-3">
-                        <label for="alertEmail" class="form-label small fw-bold text-dark">Your Work Email</label>
-                        <input type="email" class="form-control" id="alertEmail" name="email"
-                               placeholder="e.g. name@company.com" required>
+                        <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Email Address</label>
+                        <input type="email" name="email" class="wispr-input" placeholder="e.g. name@company.com" required>
                     </div>
                 </div>
-                <div class="modal-footer border-top px-4 py-3 bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">Activate Alert</button>
+                <div class="modal-footer border-top border-2 border-dark px-4 py-3">
+                    <button type="button" class="btn-secondary-outline py-2 px-3 small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-cta py-2 px-4 small">Activate Alert</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Connect With Us Modal -->
-<div class="modal fade" id="bbConnectModal" tabindex="-1" aria-hidden="true">
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-bottom px-4 py-3" style="background: #ffbe00; color: #000000;">
-                <h5 class="modal-title fw-bold">Join HirePulse Talent Network</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="background: var(--color-lumen-cream); border: 2px solid var(--color-vast-ink); border-radius: var(--radius-cards);">
+            <div class="modal-header border-bottom border-2 border-dark px-4 py-3 bg-danger text-white">
+                <h4 class="modal-title text-white" style="font-size: 24px;">Report Listing</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/connect" method="POST">
+            <form id="reportForm" method="POST" action="">
                 <div class="modal-body px-4 py-4">
-                    <p class="text-muted small mb-3">
-                        Join our curated engineering network to stay informed on exclusive senior openings, executive leadership roles, and company initiatives.
-                    </p>
-                    <div class="mb-3">
-                        <label for="talentName" class="form-label small fw-bold text-dark">Full Name</label>
-                        <input type="text" class="form-control" id="talentName" name="name"
-                               placeholder="e.g. Darshil Gehlot" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="talentEmail" class="form-label small fw-bold text-dark">Email Address</label>
-                        <input type="email" class="form-control" id="talentEmail" name="email"
-                               placeholder="e.g. darshil@example.com" required>
-                    </div>
+                    <label class="form-label small fw-bold text-uppercase" style="font-size: 11px;">Reason</label>
+                    <select name="reason" class="wispr-select">
+                        <option value="Misleading compensation or job requirements">Misleading compensation or requirements</option>
+                        <option value="Duplicate or spam job posting">Duplicate or spam job posting</option>
+                        <option value="Unresponsive or fraudulent recruiter">Unresponsive or fraudulent recruiter</option>
+                        <option value="Other policy violation">Other policy violation</option>
+                    </select>
                 </div>
-                <div class="modal-footer border-top px-4 py-3 bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning btn-sm px-4 fw-bold">Connect With Us</button>
+                <div class="modal-footer border-top border-2 border-dark px-4 py-3">
+                    <button type="button" class="btn-secondary-outline py-1 px-3 small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger py-1 px-3 small">Submit Report</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+let currentModalJobId = null;
+
+function openApplyModal(jobId, title, company) {
+    document.getElementById('applyJobTitle').textContent = title;
+    document.getElementById('applyCompany').textContent = company;
+    document.getElementById('applyForm').action = '/apply/' + jobId;
+    const modal = new bootstrap.Modal(document.getElementById('applyModal'));
+    modal.show();
+}
+
+function openReportModal() {
+    if (!currentModalJobId) return;
+    document.getElementById('reportForm').action = '/report-job/' + currentModalJobId;
+    const jobModalEl = document.getElementById('bbJobModal');
+    const jobModal = bootstrap.Modal.getInstance(jobModalEl);
+    if (jobModal) jobModal.hide();
+    const reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+    reportModal.show();
+}
+
+function toggleBookmark(jobId, btn) {
+    fetch('/bookmark/' + jobId, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const icon = btn.querySelector('i');
+            if (data.saved) {
+                btn.classList.add('active');
+                icon.className = 'bi bi-heart-fill text-danger';
+            } else {
+                btn.classList.remove('active');
+                icon.className = 'bi bi-heart';
+            }
+        }
+    })
+    .catch(() => window.location.reload());
+}
+</script>
 
 {% endblock %}

@@ -1,57 +1,68 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | HirePulse{% endblock %}
+{% block title %}Dashboard | WorkLane{% endblock %}
 
 {% block content %}
 <div class="dashboard-layout">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (Wispr Flow style with 2px ink borders) -->
     <aside class="sidebar">
         <a href="/" class="brand">
             <span class="brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="5" rx="3" width="20" height="15" fill="white" fill-opacity="0.95"/>
-                    <rect x="7" y="2" rx="1.5" width="10" height="5" fill="none" stroke="white" stroke-width="2"/>
-                    <path d="M4 13h4l2-4 3 8 2.5-5 1.5 2H20" stroke="#2457bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h10M4 18h16" stroke="#ffffeb" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="18" cy="12" r="3" fill="#f0d7ff"/>
                 </svg>
             </span>
-            <span>HirePulse</span>
+            <span>WorkLane</span>
         </a>
 
         <p class="sidebar-label">WORKSPACE</p>
 
         <a href="/" class="side-link">
-            <i class="bi bi-search"></i> <span>Find Jobs</span>
+            <i class="bi bi-compass"></i> <span>Opportunities</span>
         </a>
         <a href="/dashboard" class="side-link active">
-            <i class="bi bi-grid-1x2"></i> <span>My Dashboard</span>
+            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
         </a>
-
-        {% if session.get('role') == 'job_seeker' %}
-        <a href="/dashboard" class="side-link">
-            <i class="bi bi-send-check"></i> <span>My Applications</span>
+        <a href="/profile" class="side-link">
+            <i class="bi bi-person-badge"></i> <span>{% if session.get('role') == 'recruiter' %}Company Profile{% else %}Profile & Toolkit{% endif %}</span>
         </a>
-        {% endif %}
+        <a href="/notifications" class="side-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+            {% if unread_notifications_count > 0 %}
+            <span class="ember-dot ms-auto"></span>
+            {% endif %}
+        </a>
 
         {% if session.get('role') == 'recruiter' %}
         <a href="/post-job" class="side-link">
-            <i class="bi bi-plus-circle"></i> <span>Post a Job</span>
+            <i class="bi bi-plus-circle"></i> <span>Publish Role</span>
         </a>
         {% endif %}
 
         {% if session.get('role') == 'admin' %}
         <a href="/admin" class="side-link">
-            <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
+            <i class="bi bi-shield-check"></i> <span>Trust & Safety</span>
         </a>
         {% endif %}
 
         <div class="sidebar-bottom">
-            <div class="sidebar-help">
-                <strong>Dashboard Help</strong>
-                <p>Track your applications, manage postings and profile details.</p>
+            {% if session.get('role') == 'job_seeker' and profile_strength %}
+            <div class="p-3 border border-2 border-dark rounded-3 mb-3" style="background:#ffffff;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-bold" style="font-size:11px; text-transform:uppercase; color:var(--color-fog);">Profile Strength</span>
+                    <span class="badge-forest" style="padding:2px 8px; font-size:11px;">{{ profile_strength.percentage }}%</span>
+                </div>
+                <div class="progress" style="height: 4px; background:#e4e4d0;">
+                    <div class="progress-bar" style="width: {{ profile_strength.percentage }}%; background:var(--color-forest-ink);"></div>
+                </div>
+                <a href="/profile" class="small text-decoration-none mt-2 d-inline-block fw-semibold text-dark">Optimize Profile →</a>
             </div>
-            <a href="/logout" class="side-link">
-                <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+            {% endif %}
+
+            <a href="/logout" class="side-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>
             </a>
         </div>
     </aside>
@@ -62,159 +73,605 @@
         <!-- Topbar -->
         <div class="topbar">
             <div>
-                <span class="eyebrow">USER OVERVIEW</span>
-                <h2>Welcome, {{ session.get('name') }}</h2>
+                <span class="eyebrow">
+                    {% if session.get('role') == 'recruiter' %}TALENT PIPELINE MANAGEMENT{% elif session.get('role') == 'admin' %}ADMIN CONTROL{% else %}CANDIDATE DISCOVERY WORKSPACE{% endif %}
+                </span>
+                <h2 style="font-size: 38px; letter-spacing: -1px; margin-bottom: 0;">Welcome, {{ session.get('name') }}</h2>
             </div>
 
-            <div class="top-profile">
-                <div class="avatar">{{ session.get('name', 'U')[0]|upper }}</div>
-                <div>
-                    <strong>{{ session.get('name') }}</strong>
-                    <small>{{ session.get('role')|replace('_', ' ')|title }}</small>
+            <div class="d-flex align-items-center gap-3">
+                <div class="badge-dark-square">
+                    <span class="ember-dot me-1"></span> {{ session.get('role')|replace('_', ' ')|title }}
+                </div>
+
+                <!-- User Profile Dropdown Pill -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-dark rounded-pill py-1 px-2 d-flex align-items-center gap-2 border-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background:#ffffff; border-color:#1a1a1a;">
+                        {% if session.get('avatar_url') %}
+                        <img src="{{ session.get('avatar_url') }}" alt="{{ session.get('name') }}" class="rounded-circle" style="width:28px; height:28px; object-fit:cover;">
+                        {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:28px; height:28px; background:#f0d7ff; color:#1a1a1a; font-size:12px;">{{ session.get('name', 'U')[0]|upper }}</div>
+                        {% endif %}
+                        <span class="small fw-semibold d-none d-sm-inline">{{ session.get('name') }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-2 border-dark rounded-4 p-2 mt-2" style="min-width:240px; background:#ffffff;">
+                        <li class="px-3 py-2 border-bottom border-1 border-secondary-subtle mb-1">
+                            <div class="fw-bold text-dark text-truncate">{{ session.get('name') }}</div>
+                            <div class="small text-muted text-truncate">{{ session.get('email', '') }}</div>
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="badge rounded-pill bg-light text-dark border small" style="font-size:10px;">{{ session.get('role', '')|replace('_', ' ')|title }}</span>
+                            </div>
+                        </li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/profile"><i class="bi bi-person-badge me-2"></i> Profile & Career Toolkit</a></li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/"><i class="bi bi-compass me-2"></i> View Opportunities</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item rounded-3 py-2 text-danger fw-semibold" href="/logout"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- RECRUITER VIEW -->
-        {% if session.get('role') == 'recruiter' %}
+        <!-- ============================================================
+             JOB SEEKER EXPERIENCE
+             ============================================================ -->
+        {% if session.get('role') == 'job_seeker' %}
+
+            <!-- Metric Cards (32px radius, 2px borders, flat cream) -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md-3">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Submitted</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-vast-ink);">
+                            {{ app_stats.total }}
+                        </div>
+                        <small class="text-muted">Total applications</small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Active Review</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-vast-ink);">
+                            {{ app_stats.active }}
+                        </div>
+                        <small class="text-muted">Under evaluation</small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Interviews</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-forest-ink);">
+                            {{ app_stats.interviews }}
+                        </div>
+                        <small class="text-muted">Rounds scheduled</small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Saved Roles</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-vast-ink);">
+                            {{ app_stats.saved }}
+                        </div>
+                        <small class="text-muted">Bookmarked positions</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs: Applications vs Saved Roles -->
+            <ul class="nav nav-pills mb-4 gap-2" id="seekerTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="filter-chip active px-4 py-2" id="apps-tab" data-bs-toggle="pill" data-bs-target="#apps-content" type="button">
+                        Active Applications ({{ applications|length }})
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="filter-chip px-4 py-2" id="saved-tab" data-bs-toggle="pill" data-bs-target="#saved-content" type="button">
+                        Saved Roles ({{ saved_jobs|length }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="seekerTabsContent">
+                <!-- TAB 1: APPLICATIONS -->
+                <div class="tab-pane fade show active" id="apps-content">
+                    {% if applications %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for a in applications %}
+                            <div class="cream-card p-4">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <h3 style="font-size: 26px; margin-bottom: 0;">{{ a.title }}</h3>
+                                            {% if a.match_score and a.match_score.match_pct > 0 %}
+                                            <span class="badge-lavender">
+                                                <i class="bi bi-stars"></i> {{ a.match_score.match_pct }}% Match
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-muted small">
+                                            <strong class="text-dark">{{ a.company }}</strong> • {{ a.location }} • {{ a.salary }}
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge-forest">{{ a.status }}</span>
+
+                                        {% if a.status != 'Rejected' and a.status != 'Offered' %}
+                                        <form method="POST" action="/application/withdraw/{{ a.id }}" onsubmit="return confirm('Withdraw application for {{ a.title }}?')" class="d-inline">
+                                            <button type="submit" class="btn-ghost small text-danger py-0">Withdraw</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- VISUAL ATS STEPPER (2px ink borders, Wispr Flow pills) -->
+                                <div class="ats-pipeline-stepper my-3">
+                                    {% set steps = ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Offered'] %}
+                                    {% set current_step_idx = 0 %}
+                                    {% if a.status == 'Applied' %}{% set current_step_idx = 0 %}
+                                    {% elif a.status == 'Under Review' %}{% set current_step_idx = 1 %}
+                                    {% elif a.status == 'Shortlisted' %}{% set current_step_idx = 2 %}
+                                    {% elif a.status == 'Interview' %}{% set current_step_idx = 3 %}
+                                    {% elif a.status == 'Offered' %}{% set current_step_idx = 4 %}
+                                    {% elif a.status == 'Offer Accepted' %}{% set current_step_idx = 5 %}
+                                    {% elif a.status == 'Rejected' or a.status == 'Offer Declined' %}{% set current_step_idx = -1 %}
+                                    {% endif %}
+
+                                    {% if a.status == 'Rejected' or a.status == 'Offer Declined' %}
+                                        <div class="p-2 px-3 small border border-2 border-danger rounded-3" style="background:#fff1f2; color:#be123c;">
+                                            <i class="bi bi-x-circle me-1"></i> {% if a.status == 'Offer Declined' %}You declined this job offer.{% else %}Position closed or proceeded with another candidate.{% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex justify-content-between position-relative">
+                                            <div class="stepper-line"></div>
+                                            {% for st in steps %}
+                                            {% set idx = loop.index0 %}
+                                            <div class="text-center position-relative" style="z-index: 2; width: 18%;">
+                                                <div class="node-circle mx-auto {% if idx < current_step_idx or a.status == 'Offer Accepted' %}completed{% elif idx == current_step_idx %}active{% endif %}">
+                                                    {% if idx < current_step_idx or a.status == 'Offer Accepted' %}<i class="bi bi-check-lg"></i>{% else %}{{ idx + 1 }}{% endif %}
+                                                </div>
+                                                <span class="small d-block mt-2 {% if idx == current_step_idx or (a.status == 'Offer Accepted' and loop.last) %}fw-bold{% else %}text-muted{% endif %}" style="font-size: 12px;">
+                                                    {% if loop.last and a.status == 'Offer Accepted' %}Hired 🎉{% else %}{{ st }}{% endif %}
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- REALISTIC FORMAL OFFER & HIRED EXPERIENCES -->
+                                {% if a.status == 'Offered' %}
+                                <div class="p-4 border border-2 border-dark rounded-4 mt-3" style="background: linear-gradient(135deg, #ffffeb 0%, #f0d7ff 100%);">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="fs-4">🎉</span>
+                                        <h4 style="font-family: var(--font-eb-garamond); font-size: 26px; margin: 0; color: var(--color-vast-ink);">
+                                            Official Employment Offer Extended!
+                                        </h4>
+                                        <span class="badge-forest ms-auto">Formal Offer</span>
+                                    </div>
+                                    <p class="mb-3" style="color: var(--color-vast-ink); font-size: 15px; line-height: 1.5;">
+                                        Congratulations! <strong>{{ a.company }}</strong> has extended an offer for the <strong>{{ a.title }}</strong> position.
+                                        Review the package terms below and choose to accept or decline.
+                                    </p>
+                                    <div class="row g-2 mb-3 small">
+                                        <div class="col-sm-4 p-2 bg-white border border-1 border-dark rounded-3">
+                                            <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Total Compensation</span>
+                                            <strong class="text-dark fs-6">{{ a.salary }}</strong>
+                                        </div>
+                                        <div class="col-sm-4 p-2 bg-white border border-1 border-dark rounded-3">
+                                            <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Work Location & Mode</span>
+                                            <strong class="text-dark">{{ a.location }} • {{ a.work_mode or "Full-time" }}</strong>
+                                        </div>
+                                        <div class="col-sm-4 p-2 bg-white border border-1 border-dark rounded-3">
+                                            <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Target Joining</span>
+                                            <strong class="text-dark">{{ a.interview_date or "Within 30 days" }}</strong>
+                                        </div>
+                                    </div>
+                                    {% if a.recruiter_notes %}
+                                    <div class="p-2 px-3 bg-white border border-1 border-dark rounded-3 mb-3 small">
+                                        <strong>Message from Hiring Team:</strong> {{ a.recruiter_notes }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <form method="POST" action="/application/respond-offer/{{ a.id }}/accept" class="d-inline">
+                                            <button type="submit" class="btn-primary-cta py-2 px-4">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Accept Offer & Join {{ a.company }} →
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="/application/respond-offer/{{ a.id }}/decline" onsubmit="return confirm('Are you sure you want to decline this offer?')" class="d-inline">
+                                            <button type="submit" class="btn-secondary-outline py-2 px-3 small text-muted">
+                                                Decline Offer
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% elif a.status == 'Offer Accepted' %}
+                                <div class="p-4 border border-2 border-dark rounded-4 mt-3" style="background: #e8f5e9; border-color: #2e7d32 !important;">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="fs-4">🌟</span>
+                                        <h4 style="font-family: var(--font-eb-garamond); font-size: 26px; margin: 0; color: #1b5e20;">
+                                            Offer Formally Accepted — You're Hired!
+                                        </h4>
+                                        <span class="badge-forest ms-auto" style="background: #1b5e20; color: #ffffff;">Hired</span>
+                                    </div>
+                                    <p class="mb-0" style="color: #2e7d32; font-size: 15px; line-height: 1.5;">
+                                        You have officially accepted the offer for <strong>{{ a.title }}</strong> at <strong>{{ a.company }}</strong>. 
+                                        Your onboarding dispatch and welcome packet have been transmitted to your email. Welcome to the engineering team!
+                                    </p>
+                                </div>
+                                {% endif %}
+
+                                {% if a.interview_date %}
+                                <div class="p-3 border border-2 border-dark rounded-3 d-flex align-items-center justify-content-between mt-3" style="background:#ffffff;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-calendar-event fs-5"></i>
+                                        <div><strong>Interview Scheduled:</strong> {{ a.interview_date }}</div>
+                                    </div>
+                                    <span class="badge-lavender">Confirmed</span>
+                                </div>
+                                {% endif %}
+
+                                {% if a.recruiter_notes %}
+                                <div class="p-2 px-3 border border-2 border-dark rounded-3 mt-2 small" style="background:#ffffff;">
+                                    <span class="fw-bold text-dark">Recruiter Note:</span> {{ a.recruiter_notes }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="cream-card text-center py-5">
+                            <i class="bi bi-inbox display-5 mb-2 d-block"></i>
+                            <h3 style="font-size: 28px;">No applications submitted yet</h3>
+                            <p class="text-muted mb-3">Explore open positions matching your skills to start your candidate journey.</p>
+                            <a href="/" class="btn-primary-cta">Browse Opportunities</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- TAB 2: SAVED ROLES -->
+                <div class="tab-pane fade" id="saved-content">
+                    {% if saved_jobs %}
+                        <div class="row g-3">
+                            {% for job in saved_jobs %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="cream-card p-4 h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge-dark-square">{{ job.job_type }}</span>
+                                            <form method="POST" action="/bookmark/{{ job.id }}">
+                                                <button type="submit" class="bookmark-toggle-btn active" title="Remove bookmark">
+                                                    <i class="bi bi-heart-fill"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <h4 style="font-size: 22px; margin-bottom: 4px;">{{ job.title }}</h4>
+                                        <div class="text-muted small mb-2">{{ job.company }} • {{ job.location }}</div>
+                                        <div class="fw-bold mb-2" style="color: var(--color-forest-ink);">{{ job.salary }}</div>
+                                    </div>
+                                    <div class="pt-3 border-top border-2 border-dark mt-3 d-flex justify-content-between align-items-center">
+                                        <span class="small text-muted">{{ job.work_mode }}</span>
+                                        <a href="/?search={{ job.title|urlencode }}" class="btn-primary-cta py-1 px-3 small">View Role</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="cream-card text-center py-5">
+                            <i class="bi bi-bookmark-heart display-5 mb-2 d-block"></i>
+                            <h3 style="font-size: 28px;">No saved roles yet</h3>
+                            <p class="text-muted mb-3">Bookmark roles you are interested in reviewing later.</p>
+                            <a href="/" class="btn-primary-cta">Explore Jobs</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        <!-- ============================================================
+             RECRUITER EXPERIENCE
+             ============================================================ -->
+        {% elif session.get('role') == 'recruiter' %}
+
+            <!-- Pipeline Counters -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Total Applicants</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px;">{{ pipeline.total }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Under Review</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-ember-glow);">{{ pipeline.under_review }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Shortlisted</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-forest-ink);">{{ pipeline.shortlisted }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Interviewing</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px;">{{ pipeline.interview }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Offered</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-forest-ink);">{{ pipeline.offered }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <div class="cream-card p-3">
+                        <span class="eyebrow mb-1">Hired / Accepted</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 38px; color: var(--color-forest-ink);">{{ pipeline.hired }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recruiter Postings -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold mb-0">My Job Listings</h4>
-                <a href="/post-job" class="btn btn-primary btn-sm fw-semibold">
-                    <i class="bi bi-plus-circle me-1"></i> Post New Job
+                <h3 style="font-size: 28px; margin-bottom: 0;">Active Job Postings</h3>
+                <a href="/post-job" class="btn-primary-cta py-2 px-3 small">
+                    <i class="bi bi-plus-lg me-1"></i> Post New Role
                 </a>
             </div>
 
-            <div class="bg-white rounded-3 border p-3 mb-4 shadow-sm">
+            <div class="cream-card p-4 mb-5">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Title</th>
-                                <th>Company</th>
-                                <th>Status</th>
-                                <th class="text-end">Action</th>
+                    <table class="table align-middle mb-0" style="--bs-table-bg: transparent;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-vast-ink);">
+                                <th class="text-uppercase small fw-bold">Role & Location</th>
+                                <th class="text-uppercase small fw-bold">Department</th>
+                                <th class="text-uppercase small fw-bold">Applicants</th>
+                                <th class="text-uppercase small fw-bold">Status</th>
+                                <th class="text-uppercase small fw-bold text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for job in jobs %}
-                            <tr>
-                                <td>
+                            <tr class="recruiter-job-row {% if loop.index > 5 %}recruiter-job-hidden{% endif %}" {% if loop.index > 5 %}style="display: none;"{% endif %} style="border-bottom: 1px solid var(--color-lumen-stone);">
+                                <td class="py-3">
                                     <strong>{{ job.title }}</strong>
-                                    <div class="text-muted small">{{ job.location }} • {{ job.salary }}</div>
+                                    <div class="text-muted small">{{ job.location }} • {{ job.salary }} • {{ job.job_type }}</div>
                                 </td>
-                                <td>{{ job.company }}</td>
+                                <td>{{ job.department or 'Engineering' }}</td>
+                                <td><span class="badge-forest">{{ job.applicants_count or 0 }} candidates</span></td>
                                 <td>
                                     {% if job.status == 'approved' %}
-                                        <span class="badge bg-success-subtle text-success">Live</span>
-                                    {% elif job.status == 'pending' %}
-                                        <span class="badge bg-warning-subtle text-warning">Pending Review</span>
+                                        <span class="badge-forest">Live</span>
+                                    {% elif job.status == 'paused' %}
+                                        <span class="badge-dark-square">Paused</span>
                                     {% else %}
-                                        <span class="badge bg-secondary-subtle text-secondary">{{ job.status }}</span>
+                                        <span class="badge-lavender">{{ job.status }}</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <form method="POST" action="/delete-job/{{ job.id }}" onsubmit="return confirm('Delete this job listing?')" class="d-inline">
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="4" class="text-center py-4 text-muted">You have not posted any jobs yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="/edit-job/{{ job.id }}" class="btn-secondary-outline py-1 px-2 small">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
 
-            <h4 class="fw-bold mb-3">Candidates / Applicants</h4>
-            <div class="bg-white rounded-3 border p-3 shadow-sm">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Applicant</th>
-                                <th>Applied Role</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for a in applications %}
-                            <tr>
-                                <td><strong>{{ a.applicant }}</strong></td>
-                                <td>{{ a.title }}</td>
-                                <td><span class="badge bg-primary-subtle text-primary">{{ a.status }}</span></td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="3" class="text-center py-4 text-muted">No applications received yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                        {% if job.status == 'approved' %}
+                                        <form method="POST" action="/job/status/{{ job.id }}/paused" class="d-inline">
+                                            <button class="btn-secondary-outline py-1 px-2 small" title="Pause listing">
+                                                <i class="bi bi-pause-fill"></i>
+                                            </button>
+                                        </form>
+                                        {% elif job.status == 'paused' %}
+                                        <form method="POST" action="/job/status/{{ job.id }}/approved" class="d-inline">
+                                            <button class="btn-secondary-outline py-1 px-2 small" title="Resume listing">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
 
-        <!-- JOB SEEKER VIEW -->
-        {% elif session.get('role') == 'job_seeker' %}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold mb-0">My Applications</h4>
-                <a href="/" class="btn btn-primary btn-sm fw-semibold">
-                    <i class="bi bi-search me-1"></i> Browse More Jobs
-                </a>
-            </div>
-
-            <div class="bg-white rounded-3 border p-3 shadow-sm">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Job Title</th>
-                                <th>Company</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for a in applications %}
-                            <tr>
-                                <td><strong>{{ a.title }}</strong></td>
-                                <td>{{ a.company }}</td>
-                                <td>
-                                    <span class="badge bg-success-subtle text-success py-2 px-3 fw-semibold">
-                                        <i class="bi bi-check-circle-fill me-1"></i> {{ a.status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="3" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i>
-                                    You have not applied for any jobs yet.
-                                    <div class="mt-2">
-                                        <a href="/" class="btn btn-sm btn-primary">Discover Jobs</a>
+                                        <form method="POST" action="/delete-job/{{ job.id }}" onsubmit="return confirm('Delete this job listing?')" class="d-inline">
+                                            <button class="btn-ghost text-danger py-1 px-2 small" title="Delete listing">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center py-4 text-muted">You have not posted any jobs yet.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
+                {% if jobs|length > 5 %}
+                <div class="text-center mt-3" id="recruiterLoadMoreWrapper">
+                    <button type="button" class="btn-secondary-outline px-4 py-2 small" id="recruiterLoadMoreBtn" onclick="loadMoreRecruiterJobs()">
+                        LOAD MORE POSTINGS ({{ jobs|length - 5 }} REMAINING)
+                    </button>
+                </div>
+                {% endif %}
             </div>
 
-        <!-- ADMIN VIEW -->
+            <!-- Candidate Evaluations -->
+            <h3 style="font-size: 28px; margin-bottom: 18px;">Applicant Pipeline & Candidate Evaluations ({{ applications|length }})</h3>
+
+            {% if applications %}
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {% for a in applications %}
+                    <div class="cream-card p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h4 style="font-size: 24px; margin-bottom: 0;">{{ a.applicant }}</h4>
+                                    {% if a.match_score %}
+                                    <span class="badge-lavender">
+                                        <i class="bi bi-stars"></i> {{ a.match_score.match_pct }}% Compatibility
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="text-muted small mb-2">
+                                    Applied for <strong class="text-dark">{{ a.title }}</strong>
+                                    {% if a.applicant_headline %} • {{ a.applicant_headline }}{% endif %}
+                                    {% if a.applicant_location %} • {{ a.applicant_location }}{% endif %}
+                                </div>
+
+                                {% if a.match_score and a.match_score.matching_skills %}
+                                <div class="d-flex flex-wrap gap-1 align-items-center mb-2">
+                                    <span class="small text-muted me-1">Matching:</span>
+                                    {% for ms in a.match_score.matching_skills %}
+                                    <span class="badge-forest" style="padding: 2px 8px; font-size: 11px;">{{ ms }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="d-flex gap-2 mt-2">
+                                    {% if a.resume_link %}
+                                    <a href="{{ a.resume_link }}" target="_blank" class="btn-secondary-outline py-1 px-2 small">
+                                        <i class="bi bi-file-earmark-person me-1"></i> Resume / Portfolio
+                                    </a>
+                                    {% endif %}
+                                    {% if a.applicant_github %}
+                                    <a href="{{ a.applicant_github }}" target="_blank" class="btn-secondary-outline py-1 px-2 small">
+                                        <i class="bi bi-github me-1"></i> GitHub
+                                    </a>
+                                    {% endif %}
+                                </div>
+
+                                {% if a.cover_note %}
+                                <div class="p-2 border border-2 border-dark rounded-3 mt-3 small" style="background:#ffffff;">
+                                    <span class="fw-bold">Cover Note:</span> {{ a.cover_note }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Stage updater form -->
+                            <div class="p-3 border border-2 border-dark rounded-3" style="background:#ffffff; min-width: 320px;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small fw-bold text-uppercase" style="font-size:11px; letter-spacing:1px; color:var(--color-fog);">Pipeline Stage</span>
+                                    {% if a.status == 'Offer Accepted' %}
+                                    <span class="badge-forest" id="stageBadge-{{ a.id }}" style="font-size:11px; background:#034f46; color:#ffffff;">🎉 Hired (Accepted)</span>
+                                    {% elif a.status == 'Offered' %}
+                                    <span class="badge-lavender" id="stageBadge-{{ a.id }}" style="font-size:11px;">Offer Extended</span>
+                                    {% else %}
+                                    <span class="badge-forest" id="stageBadge-{{ a.id }}" style="font-size:11px;">{{ a.status }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- 1-Click Quick Stage Action Pills -->
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Under Review' %}btn-dark text-white{% else %}btn-outline-dark{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Under Review')">Under Review</button>
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Shortlisted' %}btn-dark text-white{% else %}btn-outline-dark{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Shortlisted')">Shortlisted</button>
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Interview' %}btn-dark text-white{% else %}btn-outline-dark{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Interview')">Interview</button>
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Offered' %}btn-dark text-white{% else %}btn-outline-dark{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Offered')">Offered</button>
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Offer Accepted' %}btn-success text-white{% else %}btn-outline-success{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Offer Accepted')">Hired</button>
+                                    <button type="button" class="btn btn-sm {% if a.status == 'Rejected' %}btn-danger text-white{% else %}btn-outline-danger{% endif %} py-0 px-2" style="font-size:11px;" onclick="quickUpdateStage({{ a.id }}, 'Rejected')">Reject</button>
+                                </div>
+
+                                <form method="POST" action="/recruiter/application/update/{{ a.id }}" id="stageForm-{{ a.id }}">
+                                    <div class="mb-2">
+                                        <select name="status" class="wispr-select py-1 px-2 small" id="stageSelect-{{ a.id }}">
+                                            <option value="Applied" {% if a.status == 'Applied' %}selected{% endif %}>Applied</option>
+                                            <option value="Under Review" {% if a.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                                            <option value="Shortlisted" {% if a.status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                            <option value="Interview" {% if a.status == 'Interview' %}selected{% endif %}>Interview Scheduled</option>
+                                            <option value="Offered" {% if a.status == 'Offered' %}selected{% endif %}>Offered</option>
+                                            <option value="Offer Accepted" {% if a.status == 'Offer Accepted' %}selected{% endif %}>Offer Accepted (Hired)</option>
+                                            <option value="Offer Declined" {% if a.status == 'Offer Declined' %}selected{% endif %}>Offer Declined</option>
+                                            <option value="Rejected" {% if a.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <input type="text" name="interview_date" value="{{ a.interview_date or '' }}" placeholder="Interview Date / Time" class="wispr-input py-1 px-2 small">
+                                    </div>
+                                    <div class="mb-2">
+                                        <input type="text" name="recruiter_notes" value="{{ a.recruiter_notes or '' }}" placeholder="Notes for candidate" class="wispr-input py-1 px-2 small">
+                                    </div>
+                                    <button type="submit" class="btn-primary-cta w-100 py-1 small">Save & Notify</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="cream-card text-center py-5">
+                    <i class="bi bi-people display-5 mb-2 d-block"></i>
+                    <h3 style="font-size: 28px;">No applicants yet</h3>
+                    <p class="text-muted">Applications submitted by engineers will appear here.</p>
+                </div>
+            {% endif %}
+
+        <!-- ============================================================
+             ADMIN EXPERIENCE
+             ============================================================ -->
         {% elif session.get('role') == 'admin' %}
-            <div class="bg-white rounded-3 border p-4 shadow-sm">
-                <h4 class="fw-bold mb-2">Admin Dashboard</h4>
-                <p class="text-muted">You have full moderation privileges over job listings and registered users.</p>
-                <a href="/admin" class="btn btn-primary">Open Admin Moderation Panel</a>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="cream-card p-4">
+                        <span class="eyebrow mb-1">Platform Users</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 44px;">{{ users_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="cream-card p-4">
+                        <span class="eyebrow mb-1">Total Postings</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 44px;">{{ jobs_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="cream-card p-4">
+                        <span class="eyebrow mb-1">Open Reports</span>
+                        <div style="font-family: var(--font-eb-garamond); font-size: 44px; color: var(--color-ember-glow);">{{ reports_count }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cream-card p-4">
+                <h3 style="font-size: 28px;">Trust & Safety Governance</h3>
+                <p class="text-muted">Moderate flagged listings, verify recruiter accounts, and oversee user activity.</p>
+                <a href="/admin" class="btn-primary-cta">Open Trust & Safety Panel</a>
             </div>
         {% endif %}
 
         <!-- FOOTER -->
-        <footer class="dashboard-footer mt-5">
-            <span>© 2026 HirePulse</span>
-            <span>Built for ambitious engineers and modern tech teams.</span>
+        <footer class="mt-5 pt-4 border-top border-2 border-dark d-flex justify-content-between text-muted small">
+            <span>© 2026 WorkLane LP</span>
+            <span>Editorial engineering career discovery & verified talent recruitment.</span>
         </footer>
 
     </main>
 </div>
+
+<script>
+function quickUpdateStage(appId, newStatus) {
+    const formData = new FormData();
+    formData.append('status', newStatus);
+
+    fetch('/recruiter/application/update/' + appId, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        }
+    })
+    .catch(() => {
+        const sel = document.getElementById('stageSelect-' + appId);
+        if (sel) {
+            sel.value = newStatus;
+            document.getElementById('stageForm-' + appId).submit();
+        }
+    });
+}
+</script>
 {% endblock %}

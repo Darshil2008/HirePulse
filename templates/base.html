@@ -4,37 +4,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}HirePulse | Tech Career Discovery Platform{% endblock %}</title>
+    <title>{% block title %}WorkLane | Tech Career Discovery & Recruitment Platform{% endblock %}</title>
 
-    <!-- HirePulse Favicon with Pulse Wave -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232457bd'/><rect x='5' y='9' rx='2.5' width='22' height='16' fill='white' opacity='.95'/><rect x='11' y='5' rx='1.5' width='10' height='6' fill='none' stroke='white' stroke-width='2'/><path d='M7 17h5l2-4 3 8 2.5-5 1.5 2H25' stroke='%232457bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <!-- WorkLane Editorial Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='10' fill='%23ffffeb' stroke='%231a1a1a' stroke-width='2'/><path d='M7 11h18M7 16h12M7 21h18' stroke='%231a1a1a' stroke-width='2.5' stroke-linecap='round'/><circle cx='23' cy='16' r='3.5' fill='%23f0d7ff' stroke='%231a1a1a' stroke-width='1.5'/></svg>">
 
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Fonts -->
+    <!-- Wispr Flow Editorial Typography: EB Garamond (Display) & Figtree (Body/UI) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- WorkLane / Wispr Flow Design System with Cache-Buster -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3.1">
+
+    <!-- Inline Critical Styles for Instant Non-Cached Guarantee -->
+    <style>
+        :root {
+            --color-lumen-cream: #f7f7f4;
+            --color-card-bg: #ffffff;
+            --color-vast-ink: #1a1a1a;
+            --color-lavender-whisper: #f0d7ff;
+            --color-forest-ink: #034f46;
+        }
+        body, html {
+            background-color: var(--color-lumen-cream) !important;
+            transition: background-color 0.2s ease;
+        }
+        .bb-job-hidden {
+            display: none !important;
+        }
+        .recruiter-job-hidden {
+            display: none !important;
+        }
+        .shimmer-text-highlight {
+            background: linear-gradient(110deg, #ffffff 15%, #f0d7ff 35%, #ffa946 55%, #ffffff 85%);
+            background-size: 250% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shineWave 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            display: inline-block;
+            font-weight: 400;
+        }
+        @keyframes shineWave {
+            0% { background-position: 250% center; }
+            100% { background-position: -50% center; }
+        }
+        @keyframes fadeInJob {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- Flash Alerts -->
+    <!-- Flash Alerts Container: Floating Top-Center Capsule (Zero Overlap with Dashboard Elements) -->
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <div class="tj-alerts-container">
+        <div class="tj-alerts-container position-fixed top-0 start-50 translate-middle-x pt-3" style="z-index: 99999; width: auto; max-width: 90vw; pointer-events: none;">
             {% for message in messages %}
-            <div class="alert alert-primary alert-dismissible fade show border-0 shadow-sm d-flex align-items-center justify-content-between m-3" role="alert">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-info-circle-fill text-primary"></i>
-                    <span>{{ message }}</span>
+            <div class="alert alert-dismissible fade show d-flex align-items-center gap-3 mb-2 shadow-lg" role="alert" 
+                 style="pointer-events: auto; background: #1a1a1a; color: #ffffeb; border: 2px solid #1a1a1a; border-radius: 9999px; padding: 10px 20px 10px 18px; margin: 0 auto; width: fit-content; min-width: 320px;">
+                <div class="d-flex align-items-center gap-2 flex-grow-1">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ffa946; flex-shrink: 0;"></span>
+                    <span class="small fw-semibold" style="letter-spacing: -0.2px;">{{ message }}</span>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close" style="position: static; padding: 0; margin: 0; width: 10px; height: 10px; opacity: 0.7;"></button>
             </div>
             {% endfor %}
         </div>
@@ -43,8 +83,128 @@
 
     {% block content %}{% endblock %}
 
+    <!-- Subtle Floating Canvas Palette Switcher -->
+    <div class="position-fixed bottom-0 end-0 m-3 d-flex align-items-center gap-1 p-1 bg-white border border-2 border-dark rounded-pill shadow-sm" style="z-index: 1050;">
+        <span class="small fw-bold px-2 d-none d-sm-inline" style="font-size: 11px; color: var(--color-fog);">Canvas:</span>
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill py-0 px-2 canvas-theme-btn" data-theme="alabaster" onclick="setCanvasTheme('alabaster')" title="Gallery Alabaster (#f7f7f4)">Alabaster</button>
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill py-0 px-2 canvas-theme-btn" data-theme="studio-white" onclick="setCanvasTheme('studio-white')" title="Crisp White (#ffffff)">White</button>
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill py-0 px-2 canvas-theme-btn" data-theme="soft-pearl" onclick="setCanvasTheme('soft-pearl')" title="Soft Slate Pearl (#f3f4f6)">Pearl</button>
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill py-0 px-2 canvas-theme-btn" data-theme="warm-paper" onclick="setCanvasTheme('warm-paper')" title="Warm Paper Linen (#f6f5ee)">Linen</button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=4.0"></script>
+
+    <!-- Global WorkLane Core Script (Inline to Guarantee Immunity from Browser Caching) -->
+    <script>
+    // Canvas Palette Switcher
+    window.setCanvasTheme = function(themeName) {
+        let color = '#f7f7f4';
+        if (themeName === 'studio-white') color = '#ffffff';
+        else if (themeName === 'soft-pearl') color = '#f3f4f6';
+        else if (themeName === 'warm-paper') color = '#f6f5ee';
+        else if (themeName === 'cream') color = '#ffffeb';
+        else color = '#f7f7f4';
+
+        document.documentElement.style.setProperty('--color-lumen-cream', color, 'important');
+        document.body.style.setProperty('background-color', color, 'important');
+        
+        try {
+            localStorage.setItem('worklane_canvas_theme', themeName);
+        } catch (e) {}
+
+        document.querySelectorAll('.canvas-theme-btn').forEach(function(btn) {
+            if (btn.getAttribute('data-theme') === themeName) {
+                btn.classList.add('btn-dark', 'text-white');
+                btn.classList.remove('btn-outline-dark');
+            } else {
+                btn.classList.remove('btn-dark', 'text-white');
+                btn.classList.add('btn-outline-dark');
+            }
+        });
+    };
+
+    // Auto-restore saved canvas theme on load
+    (function() {
+        try {
+            const saved = localStorage.getItem('worklane_canvas_theme') || 'alabaster';
+            window.setCanvasTheme(saved);
+        } catch(e) {}
+    })();
+
+    // Toggle Collapsible Filters Panel
+    window.toggleFiltersPanel = function() {
+        const panel = document.getElementById("collapsibleFiltersPanel");
+        const btnText = document.getElementById("filtersBtnText");
+        const btn = document.getElementById("toggleFiltersBtn");
+        if (!panel) return;
+
+        const isCurrentlyHidden = (panel.style.display === "none" || window.getComputedStyle(panel).display === "none");
+        if (isCurrentlyHidden) {
+            panel.style.display = "block";
+            panel.classList.remove("d-none");
+            if (btnText) btnText.textContent = "Hide Filters";
+            if (btn) btn.classList.add("active");
+        } else {
+            panel.style.display = "none";
+            panel.classList.add("d-none");
+            if (btnText) btnText.textContent = "View Filters";
+            if (btn) btn.classList.remove("active");
+        }
+    };
+
+    // Progressive Load More for Opportunities
+    window.loadMoreJobs = function() {
+        const hiddenJobs = Array.from(document.querySelectorAll(".bb-job-hidden"));
+        if (!hiddenJobs.length) {
+            const wrap = document.getElementById("bbLoadMoreWrapper");
+            if (wrap) wrap.style.display = "none";
+            return;
+        }
+        const batchSize = 6;
+        const toReveal = hiddenJobs.slice(0, batchSize);
+        toReveal.forEach(function (jobEl) {
+            jobEl.classList.remove("bb-job-hidden");
+            jobEl.style.display = "";
+            jobEl.style.animation = "fadeInJob 0.3s ease forwards";
+        });
+
+        const remaining = document.querySelectorAll(".bb-job-hidden").length;
+        const loadMoreBtn = document.getElementById("bbLoadMoreBtn");
+        if (loadMoreBtn && remaining > 0) {
+            loadMoreBtn.innerText = `LOAD MORE POSITIONS (${remaining} REMAINING)`;
+        } else if (remaining === 0) {
+            const wrap = document.getElementById("bbLoadMoreWrapper");
+            if (wrap) wrap.style.display = "none";
+        }
+    };
+
+    // Progressive Load More for Recruiter Active Postings
+    window.loadMoreRecruiterJobs = function() {
+        const hiddenRows = Array.from(document.querySelectorAll(".recruiter-job-hidden"));
+        if (!hiddenRows.length) {
+            const wrap = document.getElementById("recruiterLoadMoreWrapper");
+            if (wrap) wrap.style.display = "none";
+            return;
+        }
+        const batchSize = 5;
+        const toReveal = hiddenRows.slice(0, batchSize);
+        toReveal.forEach(function (row) {
+            row.classList.remove("recruiter-job-hidden");
+            row.style.display = "";
+            row.style.animation = "fadeInJob 0.3s ease forwards";
+        });
+
+        const remaining = document.querySelectorAll(".recruiter-job-hidden").length;
+        const btn = document.getElementById("recruiterLoadMoreBtn");
+        if (btn && remaining > 0) {
+            btn.innerText = `LOAD MORE POSTINGS (${remaining} REMAINING)`;
+        } else if (remaining === 0) {
+            const wrap = document.getElementById("recruiterLoadMoreWrapper");
+            if (wrap) wrap.style.display = "none";
+        }
+    };
+    </script>
 </body>
 
 </html>
